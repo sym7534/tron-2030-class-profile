@@ -108,12 +108,6 @@ export default function Home() {
             <span className="tnum">{totalQuestions}</span> questions &middot; built from the class
             survey spreadsheet, names and emails never read.
           </p>
-          <p className="muted">
-            Free-text answers are shown verbatim. Where answers had to be grouped to be counted
-            (nine spellings of one professor&rsquo;s name, heights in four different units), the
-            card says so. Numbers that could not be believed were set aside, and each card lists
-            them.
-          </p>
           <p className="muted">Mechatronics Engineering 2030 &middot; University of Waterloo</p>
         </footer>
       </main>
