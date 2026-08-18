@@ -17,12 +17,13 @@ import {
   answeredCount,
 } from "@/lib/data";
 import { PRESETS } from "@/lib/sections";
-import Scatter from "./charts/Scatter";
-import Strip from "./charts/Strip";
+import BucketBox, { Bucket } from "./charts/BucketBox";
 import Heatmap from "./charts/Heatmap";
 import BarsH from "./charts/BarsH";
 import Histogram from "./charts/Histogram";
 import ChartFrame from "./ChartFrame";
+import { niceDomain } from "./charts/common";
+import { axisLabel } from "@/lib/data";
 
 const COUNT = "count";
 
@@ -35,12 +36,68 @@ const isNum = (f: Field | null) => !!f && (f.kind === "numeric" || f.kind === "d
 const isCat = (f: Field | null) =>
   !!f && (f.kind === "categorical" || f.kind === "ordinal" || f.kind === "multi");
 
-const MAX_CAT_ROWS = 14;
+const MAX_CAT_ROWS = 12;
+/** privacy floor: aggregate buckets with fewer people than this are suppressed */
+const MIN_BUCKET_N = 3;
+
+/** bucket numeric x values into clean ranges for the aggregate plot */
+function numericBuckets(
+  pairs: { x: number; y: number }[],
+  xf: Field
+): { buckets: Bucket[]; suppressed: number } {
+  const xs = pairs.map((p) => p.x);
+  let edges: number[];
+  if (xf.intScale && xf.intScale[1] - xf.intScale[0] <= 10) {
+    // small integer scales: pair up values (1-2, 3-4, ...) to keep groups fat
+    const [lo, hi] = xf.intScale;
+    edges = [];
+    for (let v = lo; v <= hi + 1; v += 2) edges.push(v - 0.5);
+  } else {
+    const { lo, hi, ticks } = niceDomain(xs, { target: 5 });
+    edges = ticks.length >= 3 ? ticks : [lo, (lo + hi) / 2, hi];
+  }
+  const buckets: Bucket[] = [];
+  let suppressed = 0;
+  for (let i = 0; i < edges.length - 1; i++) {
+    const x0 = edges[i];
+    const x1 = edges[i + 1];
+    const last = i === edges.length - 2;
+    const inB = pairs.filter((p) => p.x >= x0 && (last ? p.x <= x1 : p.x < x1));
+    if (inB.length === 0) continue;
+    if (inB.length < MIN_BUCKET_N) {
+      suppressed += inB.length;
+      continue;
+    }
+    const f = (v: number) => fmtValue(xf, v).replace(/\s/g, "");
+    buckets.push({
+      label: xf.intScale ? `${Math.ceil(x0)}–${Math.floor(x1)}` : `${f(x0)}–${f(x1)}`,
+      values: inB.map((p) => p.y),
+    });
+  }
+  return { buckets, suppressed };
+}
+
+function bucketTable(buckets: Bucket[], yf: Field) {
+  const sd = (xs: number[]) => {
+    const m = mean(xs);
+    return Math.sqrt(xs.reduce((a, x) => a + (x - m) ** 2, 0) / xs.length);
+  };
+  return {
+    headers: ["bucket", "people", "mean", "\u03c3", "min", "max"],
+    rows: buckets.map((b) => [
+      b.label,
+      b.values.length,
+      fmtValue(yf, mean(b.values)),
+      fmtValue(yf, sd(b.values)),
+      fmtValue(yf, Math.min(...b.values)),
+      fmtValue(yf, Math.max(...b.values)),
+    ]),
+  };
+}
 
 export default function GraphBuilder() {
   const [xId, setXId] = useState("applyAvg");
   const [yId, setYId] = useState("avg1A");
-  const [identityOn, setIdentityOn] = useState(true);
   const [filterId, setFilterId] = useState("");
   const [filterVal, setFilterVal] = useState("");
   const [preset, setPreset] = useState<string | null>("the great deflation");
@@ -95,7 +152,6 @@ export default function GraphBuilder() {
     touched.current = true;
     setXId(p.x);
     setYId(p.y);
-    setIdentityOn(!!p.identity);
     setPreset(p.name);
   };
 
@@ -185,32 +241,34 @@ export default function GraphBuilder() {
     title = `${yf.short} vs. ${xf.short}`;
 
     if (isNum(xf) && isNum(yf)) {
-      // ---- scatter
+      // ---- numeric × numeric: bucket x, show aggregate box per bucket.
+      // No individual dots — buckets under n=3 are suppressed entirely.
       const pts = rows
         .map((r) => {
           const x = numericOf(r, xf);
           const y = numericOf(r, yf);
-          return x !== null && y !== null ? { x, y, resp: r.resp } : null;
+          return x !== null && y !== null ? { x, y } : null;
         })
-        .filter((p): p is { x: number; y: number; resp: number } => p !== null);
-      const sameUnit = !!xf.unit && xf.unit === yf.unit;
+        .filter((p): p is { x: number; y: number } => p !== null);
       const r = pearson(pts.map((p) => [p.x, p.y] as [number, number]));
-      body = pts.length ? (
-        <Scatter
-          points={pts}
-          xField={xf}
-          yField={yf}
-          height={380}
-          identity={identityOn && sameUnit}
-        />
+      const { buckets, suppressed } = numericBuckets(pts, xf);
+      body = buckets.length ? (
+        <BucketBox buckets={buckets} yField={yf} xTitle={axisLabel(xf)} height={400} />
       ) : (
         <p className="muted" style={{ padding: 40 }}>
-          nobody answered both of these.
+          {pts.length ? "every bucket here has fewer than 3 people — nothing to show safely." : "nobody answered both of these."}
         </p>
       );
       caption = (
         <>
-          one dot per person &middot; n = <span className="tnum">{pts.length}</span>
+          grouped so no dot is one person &middot; n ={" "}
+          <span className="tnum">{pts.length - suppressed}</span>
+          {suppressed > 0 && (
+            <>
+              {" "}
+              &middot; {suppressed} in buckets of &lt;{MIN_BUCKET_N} hidden
+            </>
+          )}
           {r !== null && (
             <>
               {" "}
@@ -226,48 +284,52 @@ export default function GraphBuilder() {
           )}
         </>
       );
-      table = {
-        headers: ["person", xf.short, yf.short],
-        rows: pts.map((p) => [`#${p.resp}`, fmtValue(xf, p.x), fmtValue(yf, p.y)]),
-      };
+      table = bucketTable(buckets, yf);
     } else if (isCat(xf) !== isCat(yf)) {
-      // ---- strip (category x numeric, either orientation)
+      // ---- category × numeric: same aggregate boxes, one per category
       const catF = isCat(xf) ? xf : yf;
       const numF = isCat(xf) ? yf : xf;
-      const stripRows = distribution(catF, rows)
+      let suppressed = 0;
+      const buckets: Bucket[] = distribution(catF, rows)
         .map((d) => ({
           label: shortCat(catF, d.label),
           values: rows
             .filter((r) => categoriesOf(r, catF).includes(d.label))
-            .map((r) => ({ v: numericOf(r, numF), resp: r.resp }))
-            .filter((p): p is { v: number; resp: number } => p.v !== null),
+            .map((r) => numericOf(r, numF))
+            .filter((v): v is number => v !== null),
         }))
-        .filter((r) => r.values.length > 0)
-        .sort((a, b) => median(b.values.map((v) => v.v)) - median(a.values.map((v) => v.v)))
+        .filter((b) => {
+          if (b.values.length === 0) return false;
+          if (b.values.length < MIN_BUCKET_N) {
+            suppressed += b.values.length;
+            return false;
+          }
+          return true;
+        })
+        .sort((a, b) => mean(b.values) - mean(a.values))
         .slice(0, MAX_CAT_ROWS);
-      const shown = stripRows.reduce((a, r) => a + r.values.length, 0);
-      body = stripRows.length ? (
-        <Strip rows={stripRows} numField={numF} />
+      const shown = buckets.reduce((a, b) => a + b.values.length, 0);
+      body = buckets.length ? (
+        <BucketBox buckets={buckets} yField={numF} xTitle={axisLabel(catF)} height={400} />
       ) : (
         <p className="muted" style={{ padding: 40 }}>
-          nobody answered both of these.
+          every group here has fewer than {MIN_BUCKET_N} people — nothing to show safely.
         </p>
       );
       caption = (
         <>
-          rows sorted by median &middot; n = <span className="tnum">{shown}</span>
-          {catF.kind === "multi" && <> &middot; pick-many, so people appear in several rows</>}
+          groups sorted by mean &middot; n = <span className="tnum">{shown}</span>
+          {suppressed > 0 && (
+            <>
+              {" "}
+              &middot; {suppressed} in groups of &lt;{MIN_BUCKET_N} hidden
+            </>
+          )}
+          {catF.kind === "multi" && <> &middot; pick-many, so people appear in several groups</>}
           {isNum(xf) && <> &middot; axes swapped so the categories can be read</>}
         </>
       );
-      table = {
-        headers: [catF.short, "people", `median ${numF.short.toLowerCase()}`],
-        rows: stripRows.map((r) => [
-          r.label,
-          r.values.length,
-          fmtValue(numF, median(r.values.map((v) => v.v))),
-        ]),
-      };
+      table = bucketTable(buckets, numF);
     } else {
       // ---- heatmap (category x category)
       const xLabels = distribution(xf, rows).slice(0, 10);
@@ -343,7 +405,6 @@ export default function GraphBuilder() {
   );
 
   const activePreset = PRESETS.find((p) => p.name === preset);
-  const sameUnitPair = !!xf?.unit && xf.unit === yf?.unit;
 
   return (
     <div className="builder">
@@ -433,15 +494,7 @@ export default function GraphBuilder() {
       </ChartFrame>
 
       <div className="builder-foot">
-        {sameUnitPair && isNum(xf) && isNum(yf) && (
-          <button
-            onClick={() => setIdentityOn((v) => !v)}
-            className={identityOn ? "toggle-active" : undefined}
-          >
-            {identityOn ? "hide" : "show"} the y = x line
-          </button>
-        )}
-        {(filterVal || preset) && (
+        {filterVal && (
           <button
             onClick={() => {
               setFilterId("");
@@ -454,9 +507,12 @@ export default function GraphBuilder() {
       </div>
 
       <p className="builder-hint muted">
-        Any question against any other. Numbers &times; numbers draws a scatter, categories
-        &times; numbers draws dot rows with medians, categories &times; categories draws a
-        heatmap. Set an axis to <em>just count people</em> for the plain distribution.
+        Any question against any other. Numbers &times; numbers groups the x-axis into
+        buckets and shows each bucket&rsquo;s mean, &plusmn;1&sigma;, &plusmn;2&sigma; and
+        min/max &mdash; never individual people. Categories &times; numbers does the same per
+        group, categories &times; categories draws a heatmap. Groups smaller than three
+        people are hidden. Set an axis to <em>just count people</em> for the plain
+        distribution.
       </p>
     </div>
   );
