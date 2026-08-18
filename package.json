@@ -11,6 +11,7 @@
     "preview": "node scripts/preview.cjs"
   },
   "dependencies": {
+    "lenis": "^1.3.26",
     "next": "^15.4.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
