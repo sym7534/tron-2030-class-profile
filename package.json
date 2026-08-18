@@ -1,0 +1,25 @@
+{
+  "name": "tron-2030-class-profile",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "data": "node scripts/build-data.mjs",
+    "dev": "next dev",
+    "build": "npm run data && next build && node scripts/copy-out.mjs",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "^15.4.6",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "playwright": "1.49",
+    "typescript": "^5.7.0",
+    "xlsx": "^0.18.5"
+  }
+}
