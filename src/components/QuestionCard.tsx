@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   survey,
   fieldById,
@@ -8,15 +8,8 @@ import {
   distribution,
   answeredCount,
   numericValues,
-  binsFor,
-  fmtValue,
-  mean,
-  median,
-  quantile,
   dateAsDays,
   shortCat,
-  cmToFtIn,
-  N,
 } from "@/lib/data";
 import BarsH from "./charts/BarsH";
 import Histogram from "./charts/Histogram";
@@ -94,7 +87,6 @@ function weeklyBins(isoDates: string[]) {
 
 export default function QuestionCard({ id, qNum }: { id: string; qNum?: number }) {
   const f = fieldById[id];
-  const [showTable, setShowTable] = useState(false);
   const rep = survey.report[id];
   const answered = answeredCount(f);
 
@@ -134,99 +126,8 @@ export default function QuestionCard({ id, qNum }: { id: string; qNum?: number }
     return <BarsH data={dist} total={f.kind === "multi" ? answered : undefined} totalLabel={f.kind === "multi" ? "of respondents" : "of answers"} />;
   }, [f, id, rep, answered]);
 
-  const table = useMemo(() => {
-    if (!showTable) return null;
-    if (f.kind === "numeric") {
-      const vals = numericValues(id);
-      const rows: [string, string][] = [
-        ["answered", String(vals.length)],
-        ["median", fmtValue(f, median(vals))],
-        ["mean", fmtValue(f, mean(vals))],
-        ["25th–75th percentile", `${fmtValue(f, quantile(vals, 0.25))} – ${fmtValue(f, quantile(vals, 0.75))}`],
-        ["min – max", `${fmtValue(f, Math.min(...vals))} – ${fmtValue(f, Math.max(...vals))}`],
-      ];
-      const bins = binsFor(f, vals);
-      return (
-        <div style={{ display: "grid", gap: 16 }}>
-          <table className="data-table">
-            <tbody>
-              {rows.map(([k, v]) => (
-                <tr key={k}>
-                  <td>{k}</td>
-                  <td>{v}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>range</th>
-                <th>count</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bins.map((b) => (
-                <tr key={b.label}>
-                  <td>{b.label}</td>
-                  <td>{b.count}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    }
-    if (f.kind === "date") {
-      const isoDates = survey.rows.map((r) => r[id]).filter((v): v is string => typeof v === "string");
-      return (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>week of</th>
-              <th>count</th>
-            </tr>
-          </thead>
-          <tbody>
-            {weeklyBins(isoDates).map((b) => (
-              <tr key={b.label}>
-                <td>{b.label}</td>
-                <td>{b.count}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      );
-    }
-    const dist = distribution(f);
-    const denom = f.kind === "multi" ? answered : dist.reduce((a, d) => a + d.count, 0);
-    return (
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>answer</th>
-            <th>count</th>
-            <th>%</th>
-          </tr>
-        </thead>
-        <tbody>
-          {dist.map((d) => (
-            <tr key={d.label}>
-              <td>{shortCat(f, d.label)}</td>
-              <td>{d.count}</td>
-              <td>{denom ? Math.round((d.count / denom) * 100) : 0}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-  }, [showTable, f, id, answered]);
 
   const excluded = rep?.excluded ?? [];
-  const notes = rep?.notes ?? [];
-  const showcaseVariantCount = SHOWCASE_VARIANTS.has(id)
-    ? Object.values(rep?.merged ?? {}).reduce((a, v) => a + v.length, 0)
-    : 0;
 
   return (
     <article
@@ -249,39 +150,21 @@ export default function QuestionCard({ id, qNum }: { id: string; qNum?: number }
         </div>
         <h3 style={{ fontSize: 18, fontWeight: 400, lineHeight: 1.35 }}>{f.label}</h3>
       </header>
-      {showTable ? table : body}
-      <footer style={{ marginTop: 10, fontSize: 13.5 }} className="muted">
-        {f.kind === "multi" && <div style={{ fontStyle: "italic" }}>multiple answers allowed</div>}
-        {notes.map((n) => (
-          <div key={n} style={{ fontStyle: "italic" }}>
-            {n}
-          </div>
-        ))}
-        {showcaseVariantCount > 1 && (
-          <div style={{ fontStyle: "italic" }}>
-            {showcaseVariantCount} spelling variants preserved — hover the bars
-          </div>
-        )}
-        {excluded.length > 0 && (
+      {body}
+      {excluded.length > 0 && (
+        <footer style={{ marginTop: 10, fontSize: 13.5 }} className="muted">
           <details>
             <summary style={{ cursor: "pointer", fontStyle: "italic" }}>
-              {excluded.length} answer{excluded.length > 1 ? "s" : ""} set aside
+              {excluded.length} more answer{excluded.length > 1 ? "s" : ""}…
             </summary>
             <ul style={{ listStyle: "none", marginTop: 4 }}>
               {excluded.map((e, i) => (
-                <li key={i}>
-                  “{e.raw}” — {e.reason}
-                </li>
+                <li key={i}>“{e.raw}”</li>
               ))}
             </ul>
           </details>
-        )}
-        {f.kind !== "text" && (
-          <button onClick={() => setShowTable((s) => !s)} style={{ marginTop: 6 }}>
-            {showTable ? "view as chart" : "view as table"}
-          </button>
-        )}
-      </footer>
+        </footer>
+      )}
     </article>
   );
 }

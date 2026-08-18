@@ -83,7 +83,6 @@ export default function Home() {
         </header>
 
         <section id="builder" className="builder-section">
-          <h2 className="section-header">the instrument</h2>
           <GraphBuilder />
         </section>
 

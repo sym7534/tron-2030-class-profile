@@ -447,7 +447,22 @@ export default function GraphBuilder() {
         ))}
       </div>
 
-      <div className="axis-row">
+      <h3 className="builder-title">
+        {title}
+        {filterVal && (
+          <span className="muted">
+            {" "}
+            &middot; {shortCat(filterField!, filterVal)} only ({countNoun(rows.length)})
+          </span>
+        )}
+      </h3>
+      {activePreset && <p className="preset-blurb">{activePreset.quip}</p>}
+
+      <ChartFrame caption={caption} table={table}>
+        {body}
+      </ChartFrame>
+
+      <div className="axis-row" style={{ marginTop: 14, marginBottom: 0 }}>
         <span className="axis-ctl">
           <label htmlFor="x-axis" className="axis-label">
             x
@@ -502,22 +517,6 @@ export default function GraphBuilder() {
           )}
         </span>
       </div>
-
-
-      <h3 className="builder-title">
-        {title}
-        {filterVal && (
-          <span className="muted">
-            {" "}
-            &middot; {shortCat(filterField!, filterVal)} only ({countNoun(rows.length)})
-          </span>
-        )}
-      </h3>
-      {activePreset && <p className="preset-blurb">{activePreset.quip}</p>}
-
-      <ChartFrame caption={caption} table={table}>
-        {body}
-      </ChartFrame>
 
       {hasGridChart && (
         <div className="ctl-row" role="group" aria-label="display options">
