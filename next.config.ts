@@ -1,12 +1,17 @@
 import type { NextConfig } from "next";
 
+// GitHub Pages project sites live under /<repo-name>/ — the deploy workflow
+// sets PAGES_BASE_PATH accordingly. Empty for local builds and custom domains.
+const basePath = process.env.PAGES_BASE_PATH || "";
+
 const nextConfig: NextConfig = {
   output: "export",
+  basePath,
   images: { unoptimized: true },
-  // on Windows, keep the build dir out of OneDrive's reach — its sync steals
-  // file handles mid-build and corrupts .next (ENOENT on manifests); the
-  // export is copied back to ./out by scripts/copy-out.mjs
-  distDir: process.platform === "win32" ? "../../../../tron-2030-build" : ".next",
+  // .next stays at the project root, but on Windows it should be a directory
+  // JUNCTION to a folder outside OneDrive (OneDrive sync steals file handles
+  // mid-build and corrupts it). `npm run data` recreates the junction if
+  // missing — see scripts/build-data.mjs.
 };
 
 export default nextConfig;

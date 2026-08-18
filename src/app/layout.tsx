@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Lora, Geist } from "next/font/google";
 import localFont from "next/font/local";
+import survey from "@/data/survey.json";
 import "./globals.css";
 
 const lora = Lora({
@@ -23,8 +24,7 @@ const endless = localFont({
 
 export const metadata: Metadata = {
   title: "Mechatronics 2030 — Class Profile",
-  description:
-    "68 responses, 78 questions. The University of Waterloo Mechatronics Engineering class of 2030, measured against itself.",
+  description: `${survey.n} responses, 78 questions. The University of Waterloo Mechatronics Engineering class of 2030, measured against itself.`,
 };
 
 export default function RootLayout({

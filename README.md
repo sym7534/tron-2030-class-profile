@@ -12,12 +12,27 @@ npm run build     # parses the xlsx -> survey.json, then builds the static site
 npm run preview   # serves out/ at http://localhost:3300
 ```
 
-Or deploy the `out/` folder anywhere (Vercel, GitHub Pages, Netlify).
+`npm run dev` works for development; `npm run data` re-runs just the spreadsheet
+pipeline (`scripts/build-data.mjs`) if the survey file changes.
 
-`npm run preview` is the reliable way to view the site on Windows — `npm run dev`
-trips over the out-of-OneDrive build directory (see the note below). `npm run data`
-re-runs just the spreadsheet pipeline (`scripts/build-data.mjs`) if the survey
-file changes.
+## Deploying (GitHub Pages)
+
+The repo ships with `.github/workflows/deploy.yml`. To go live:
+
+1. Create a GitHub repo and push this project (`main` branch).
+2. In the repo: Settings → Pages → Source: **GitHub Actions**.
+3. Every push to `main` rebuilds and deploys to
+   `https://<user>.github.io/<repo>/` (the workflow sets the base path
+   automatically; with a custom domain it deploys at the root instead).
+
+Notes:
+- **The survey xlsx is gitignored** — it contains names and emails, and GitHub
+  Pages repos on free accounts must be public. CI builds from the committed,
+  name-free `src/data/survey.json`; regenerate it locally with `npm run data`
+  whenever the spreadsheet changes, and commit the JSON.
+- Pages sites are always public (no auth). The deployed bundle contains the
+  cleaned survey data — same rows the site displays.
+- `out/` also deploys as-is to Vercel or Netlify if you ever switch.
 
 ## How it's put together
 
@@ -32,9 +47,12 @@ file changes.
   from the two picked fields (scatter / dot-rows / heatmap / distribution) and
   mirrors its state into the URL hash, so graphs are shareable links.
 
-Windows note: the Next build directory is kept outside OneDrive
-(`C:\Users\<you>\tron-2030-build`) because OneDrive sync corrupts `.next`
-mid-build; `scripts/copy-out.mjs` copies the export back to `./out`.
+Windows note: OneDrive sync corrupts Next's build cache mid-build, so
+`scripts/junction.cjs` (run automatically before `dev`/`build`) makes
+`.next/cache` a junction to `C:\Users\<you>\.tron-2030-next-cache`, outside
+OneDrive, and pre-clears `out/` so the exporter never races OneDrive's locks.
+If a build still fails with EBUSY on `out/`, something (an old preview server)
+is holding it — close it and rerun.
 
 ## Verification
 

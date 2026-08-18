@@ -17,6 +17,17 @@ const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const XL = path.join(ROOT, "Mechatronics Engineering 2030Class Survey(1-68).xlsx");
 const OUT = path.join(ROOT, "src", "data", "survey.json");
 
+// The xlsx holds names/emails, so it is gitignored and absent in CI — there we
+// build from the committed, already-cleaned survey.json instead.
+if (!fs.existsSync(XL)) {
+  if (fs.existsSync(OUT)) {
+    console.log("Survey xlsx not present — using the committed src/data/survey.json as-is.");
+    process.exit(0);
+  }
+  console.error(`Neither ${path.basename(XL)} nor src/data/survey.json found — nothing to build from.`);
+  process.exit(1);
+}
+
 const wb = XLSX.read(fs.readFileSync(XL));
 const sheet = wb.Sheets[wb.SheetNames[0]];
 const raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null });
@@ -604,7 +615,6 @@ note("religion", "one respondent selected every single option; their clicks are 
 note("programs", "one respondent ticked all eleven programs; the long tail is mostly them");
 note("metFriends", "“all of the above” kept as its own bucket rather than guessed apart");
 note("sexuality", "one write-in kept verbatim, as is tradition");
-note("pineapple", "joke write-ins stay verbatim — they're data");
 note("favTeacher", "answers naming two teachers count once for each");
 note("rate1B", "includes stream-4 ratings of a 1B term still in progress");
 

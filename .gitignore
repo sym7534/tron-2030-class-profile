@@ -1,6 +1,15 @@
 node_modules/
 .next/
 out/
+
+# the raw survey export contains names + emails — never commit it;
+# the site builds from the committed, name-free src/data/survey.json
+*.xlsx
+
+# local working docs, not part of the published repo
+SKILL.md
+PLAN.md
+DESIGN.md
 next-env.d.ts
 *.tsbuildinfo
 .DS_Store

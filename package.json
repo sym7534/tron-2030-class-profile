@@ -4,8 +4,11 @@
   "private": true,
   "scripts": {
     "data": "node scripts/build-data.mjs",
+    "predev": "node scripts/junction.cjs",
     "dev": "next dev",
-    "build": "npm run data && next build && node scripts/copy-out.mjs",
+    "prebuild": "node scripts/junction.cjs",
+    "build": "npm run data && next build",
+    "postbuild": "node scripts/postbuild.cjs",
     "start": "next start",
     "lint": "next lint",
     "preview": "node scripts/preview.cjs"
