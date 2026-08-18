@@ -207,28 +207,38 @@ export default function BucketBox({
                   stroke={INK[0]}
                   strokeWidth={2}
                 />
-                <text
-                  x={cx + BOX_W / 2 + 7}
-                  y={meanY}
-                  fontSize={13}
-                  fontWeight={600}
-                  fill="#171717"
-                  className="tnum"
-                >
-                  {fmtShort(s.mean)}
-                </text>
-                {/* min / max labels — same column and size as the mean; skipped when
-                    they'd collide with the mean label (values stay in the tooltip/table) */}
-                {Math.abs(maxY - meanY) > 13 && (
-                  <text x={cx + BOX_W / 2 + 7} y={maxY} fontSize={13} fill="#404040" className="tnum">
-                    {fmtShort(s.max)}
-                  </text>
-                )}
-                {Math.abs(minY - meanY) > 13 && (
-                  <text x={cx + BOX_W / 2 + 7} y={minY} fontSize={13} fill="#404040" className="tnum">
-                    {fmtShort(s.min)}
-                  </text>
-                )}
+                {(() => {
+                  // flip value labels to the left of the box when the right
+                  // edge would clip them (last bucket on narrow screens)
+                  const flip = cx + BOX_W / 2 + 44 > width - PAD_R;
+                  const lx = flip ? cx - BOX_W / 2 - 7 : cx + BOX_W / 2 + 7;
+                  const anchor = flip ? "end" : "start";
+                  return (
+                    <>
+                      <text
+                        x={lx}
+                        y={meanY}
+                        textAnchor={anchor}
+                        fontSize={13}
+                        fontWeight={600}
+                        fill="#171717"
+                        className="tnum"
+                      >
+                        {fmtShort(s.mean)}
+                      </text>
+                      {Math.abs(maxY - meanY) > 13 && (
+                        <text x={lx} y={maxY} textAnchor={anchor} fontSize={13} fill="#404040" className="tnum">
+                          {fmtShort(s.max)}
+                        </text>
+                      )}
+                      {Math.abs(minY - meanY) > 13 && (
+                        <text x={lx} y={minY} textAnchor={anchor} fontSize={13} fill="#404040" className="tnum">
+                          {fmtShort(s.min)}
+                        </text>
+                      )}
+                    </>
+                  );
+                })()}
                 {/* bucket label + n */}
                 <text x={cx} y={PAD_T + plotH + 16} textAnchor="middle" fontSize={13} fill="#171717">
                   {s.label.length > 14 ? s.label.slice(0, 13) + "…" : s.label}
