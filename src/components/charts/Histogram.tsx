@@ -1,6 +1,6 @@
 "use client";
 
-import { Field, binsFor, fmtValue, mean, median, axisLabel } from "@/lib/data";
+import { Field, binsFor, fmtValue, axisLabel } from "@/lib/data";
 import Columns from "./Columns";
 
 interface Props {
@@ -9,11 +9,6 @@ interface Props {
   height?: number;
   grid?: boolean;
   gridMinor?: boolean;
-}
-
-function stddev(xs: number[]): number {
-  const m = xs.reduce((a, b) => a + b, 0) / xs.length;
-  return Math.sqrt(xs.reduce((a, x) => a + (x - m) ** 2, 0) / xs.length);
 }
 
 export default function Histogram({ field, values, height, grid = true, gridMinor = false }: Props) {
@@ -27,7 +22,6 @@ export default function Histogram({ field, values, height, grid = true, gridMino
         ? fmtValue(field, b.x0)
         : `${fmtValue(field, b.x0)} – ${fmtValue(field, b.x1)}`,
   }));
-  const sd = stddev(values);
   const xTitle = axisLabel(field);
   return (
     <div>
@@ -40,14 +34,6 @@ export default function Histogram({ field, values, height, grid = true, gridMino
         xTitle={xTitle}
         yTitle="people"
       />
-      <div className="muted" style={{ fontSize: 14, marginTop: 6 }}>
-        median <span className="tnum">{fmtValue(field, median(values))}</span> · mean{" "}
-        <span className="tnum">{fmtValue(field, mean(values))}</span> · σ{" "}
-        <span className="tnum">{fmtValue(field, sd)}</span> · range{" "}
-        <span className="tnum">
-          {fmtValue(field, Math.min(...values))}–{fmtValue(field, Math.max(...values))}
-        </span>
-      </div>
     </div>
   );
 }

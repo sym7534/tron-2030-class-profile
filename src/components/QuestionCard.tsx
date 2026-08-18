@@ -85,7 +85,7 @@ function weeklyBins(isoDates: string[]) {
   return bins;
 }
 
-export default function QuestionCard({ id, qNum }: { id: string; qNum?: number }) {
+export default function QuestionCard({ id }: { id: string; qNum?: number }) {
   const f = fieldById[id];
   const rep = survey.report[id];
   const answered = answeredCount(f);
@@ -140,13 +140,10 @@ export default function QuestionCard({ id, qNum }: { id: string; qNum?: number }
     >
       <header style={{ marginBottom: 12 }}>
         <div
-          className="sans muted"
-          style={{ fontSize: 12, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}
+          className="sans tnum"
+          style={{ fontSize: 12, textAlign: "right", color: "#a3a3a3", marginBottom: 4 }}
         >
-          {qNum ? `Q${String(qNum).padStart(2, "0")}` : ""}{" "}
-          <span style={{ float: "right", textTransform: "none", color: "#a3a3a3" }} className="tnum">
-            {answered} answer{answered === 1 ? "" : "s"}
-          </span>
+          {answered} answer{answered === 1 ? "" : "s"}
         </div>
         <h3 style={{ fontSize: 18, fontWeight: 400, lineHeight: 1.35 }}>{f.label}</h3>
       </header>

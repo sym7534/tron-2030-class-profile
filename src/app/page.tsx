@@ -92,9 +92,6 @@ export default function Home() {
             <section key={s.id} id={s.id} className="chapter">
               <div className="chapter-head">
                 <h2 className="section-header">{s.title}</h2>
-                <p className="muted chapter-count tnum">
-                  {ids.length} question{ids.length === 1 ? "" : "s"}
-                </p>
               </div>
               <div className={s.id === "words" ? "card-grid one-col" : "card-grid"}>
                 {ids.map((id) => (
