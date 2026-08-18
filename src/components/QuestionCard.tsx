@@ -138,14 +138,19 @@ export default function QuestionCard({ id }: { id: string; qNum?: number }) {
         breakInside: "avoid",
       }}
     >
-      <header style={{ marginBottom: 12 }}>
-        <div
-          className="sans tnum"
-          style={{ fontSize: 12, textAlign: "right", color: "#a3a3a3", marginBottom: 4 }}
-        >
-          {answered} answer{answered === 1 ? "" : "s"}
-        </div>
+      <header
+        style={{
+          marginBottom: 12,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "baseline",
+          gap: 12,
+        }}
+      >
         <h3 style={{ fontSize: 18, fontWeight: 400, lineHeight: 1.35 }}>{f.label}</h3>
+        <span className="sans tnum" style={{ fontSize: 12, color: "#a3a3a3", whiteSpace: "nowrap" }}>
+          {answered} answer{answered === 1 ? "" : "s"}
+        </span>
       </header>
       {body}
       {excluded.length > 0 && (
