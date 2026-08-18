@@ -152,6 +152,17 @@ export default function BucketBox({
                   const dotBot = showSd2 ? s.lo2 : bot;
                   return (
                     <>
+                      {/* ±1σ box first (light gray, no outline) so every line renders above it */}
+                      {showSd1 && (
+                        <rect
+                          x={cx - BOX_W / 2}
+                          y={sy(s.hi1)}
+                          width={BOX_W}
+                          height={Math.max(sy(s.lo1) - sy(s.hi1), 2)}
+                          fill="#dcdcdc"
+                          rx={2}
+                        />
+                      )}
                       {/* min/max: dotted stems, box-width caps */}
                       <line
                         x1={cx}
@@ -183,17 +194,6 @@ export default function BucketBox({
                           <line x1={cx - BOX_W / 2} y1={sy(s.hi2)} x2={cx + BOX_W / 2} y2={sy(s.hi2)} stroke={INK[0]} strokeWidth={2} />
                           <line x1={cx - BOX_W / 2} y1={sy(s.lo2)} x2={cx + BOX_W / 2} y2={sy(s.lo2)} stroke={INK[0]} strokeWidth={2} />
                         </>
-                      )}
-                      {/* ±1σ box (light gray, no outline) */}
-                      {showSd1 && (
-                        <rect
-                          x={cx - BOX_W / 2}
-                          y={sy(s.hi1)}
-                          width={BOX_W}
-                          height={Math.max(sy(s.lo1) - sy(s.hi1), 2)}
-                          fill="#dcdcdc"
-                          rx={2}
-                        />
                       )}
                     </>
                   );

@@ -50,7 +50,7 @@ export default function Columns({
   const [ref, width] = useMeasure<HTMLDivElement>();
   const { tip, show, hide } = useTooltip();
 
-  const PAD_T = 12;
+  const PAD_T = capLabels ? 20 : 12; // cap labels sit above full-height columns
   const PAD_B = xTitle ? 40 : 24;
 
   const max = Math.max(...data.map((d) => d.count), 1);

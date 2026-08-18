@@ -99,7 +99,7 @@ export default function BarsH({ data, total, totalLabel = "of answers", maxRows 
                   fontFamily="var(--serif)"
                   fill="var(--text-secondary)"
                 >
-                  {d.label.length > 28 ? d.label.slice(0, 27) + "…" : d.label}
+                  {d.label.length > 24 ? d.label.slice(0, 23) + "…" : d.label}
                 </text>
                 {d.count > 0 && <path d={barPathH(LABEL_W, y + (ROW_H - BAR_H) / 2, w, BAR_H)} fill={INK[0]} />}
                 <text
