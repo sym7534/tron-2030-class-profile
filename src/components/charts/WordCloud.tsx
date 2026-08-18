@@ -124,11 +124,6 @@ export default function WordCloud({ entries, height = 320 }: Props) {
           </g>
         </svg>
       )}
-      {maxCount > 1 && (
-        <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>
-          bigger &amp; bolder = more of us said it
-        </div>
-      )}
     </div>
   );
 }
