@@ -47,6 +47,7 @@ export interface Preset {
 export const PRESETS: Preset[] = [
   { name: "does the grind pay?", quip: "applications sent vs. hourly wage", x: "jobsApplied", y: "wage" },
   { name: "the great deflation", quip: "the average you came with vs. the one 1A gave you", x: "applyAvg", y: "avg1A", identity: true },
+  { name: "high school vs. university", quip: "HS final average vs. first-year average", x: "hsAvg", y: "cumAvg", identity: true },
   { name: "money vs. marks", quip: "first-year average vs. co-op wage", x: "cumAvg", y: "wage" },
   { name: "show up, cash out", quip: "1A attendance vs. 1A average", x: "attend1A", y: "avg1A" },
   { name: "the corruption arc", quip: "rice purity, before vs. after Waterloo", x: "ricePurity", y: "riceWaterloo", identity: true },

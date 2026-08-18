@@ -7,7 +7,7 @@ import Waffle from "@/components/charts/Waffle";
 function heroStats() {
   const wages = numericValues("wage");
   const apps = numericValues("jobsApplied");
-  const nighters = numericValues("allNighters");
+  const caffeine = numericValues("caffeine");
   const cum = numericValues("cumAvg");
   return [
     { value: `${Math.round(median(cum) * 10) / 10}%`, label: "median first-year average" },
@@ -17,8 +17,8 @@ function heroStats() {
       label: "applications sent, total",
     },
     {
-      value: nighters.reduce((a, b) => a + b, 0).toLocaleString("en-CA"),
-      label: "all-nighters pulled, combined",
+      value: `${Math.round(median(caffeine))} mg`,
+      label: "median daily caffeine",
     },
   ];
 }
