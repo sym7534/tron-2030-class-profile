@@ -40,7 +40,7 @@ export default function Histogram({ field, values, height, grid = true, gridMino
         xTitle={xTitle}
         yTitle="people"
       />
-      <div className="muted" style={{ fontSize: 13, marginTop: 6 }}>
+      <div className="muted" style={{ fontSize: 14, marginTop: 6 }}>
         median <span className="tnum">{fmtValue(field, median(values))}</span> · mean{" "}
         <span className="tnum">{fmtValue(field, mean(values))}</span> · σ{" "}
         <span className="tnum">{fmtValue(field, sd)}</span> · range{" "}

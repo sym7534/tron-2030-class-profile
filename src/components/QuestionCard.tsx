@@ -240,17 +240,17 @@ export default function QuestionCard({ id, qNum }: { id: string; qNum?: number }
       <header style={{ marginBottom: 12 }}>
         <div
           className="sans muted"
-          style={{ fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}
+          style={{ fontSize: 12, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}
         >
           {qNum ? `Q${String(qNum).padStart(2, "0")}` : ""}{" "}
           <span style={{ float: "right" }} className="tnum">
             n = {answered}
           </span>
         </div>
-        <h3 style={{ fontSize: 17, fontWeight: 400, lineHeight: 1.35 }}>{f.label}</h3>
+        <h3 style={{ fontSize: 18, fontWeight: 400, lineHeight: 1.35 }}>{f.label}</h3>
       </header>
       {showTable ? table : body}
-      <footer style={{ marginTop: 10, fontSize: 12.5 }} className="muted">
+      <footer style={{ marginTop: 10, fontSize: 13.5 }} className="muted">
         {f.kind === "multi" && <div style={{ fontStyle: "italic" }}>multiple answers allowed</div>}
         {notes.map((n) => (
           <div key={n} style={{ fontStyle: "italic" }}>

@@ -102,7 +102,7 @@ export default function Heatmap({ xLabels, yLabels, cells, height }: Props) {
                       x={cx + colW / 2}
                       y={cy + rowH / 2 + 4}
                       textAnchor="middle"
-                      fontSize={11}
+                      fontSize={12}
                       fill={v / max > 0.55 ? SURFACE : "#171717"}
                     >
                       {mode === "count" ? raw : `${Math.round(v)}`}
@@ -118,7 +118,7 @@ export default function Heatmap({ xLabels, yLabels, cells, height }: Props) {
               x={PAD_L - 8}
               y={PAD_T + j * rowH + rowH / 2 + 4}
               textAnchor="end"
-              fontSize={12}
+              fontSize={13}
               fontFamily="var(--serif)"
               fill="var(--text-secondary)"
             >
@@ -131,7 +131,7 @@ export default function Heatmap({ xLabels, yLabels, cells, height }: Props) {
               x={PAD_L + i * colW + colW / 2}
               y={PAD_T + yLabels.length * rowH + 12}
               textAnchor="end"
-              fontSize={11}
+              fontSize={12}
               fill={AXIS_TEXT}
               transform={`rotate(-40 ${PAD_L + i * colW + colW / 2} ${
                 PAD_T + yLabels.length * rowH + 12
@@ -143,7 +143,7 @@ export default function Heatmap({ xLabels, yLabels, cells, height }: Props) {
         </svg>
       )}
       <div style={{ display: "flex", gap: 12, marginTop: 6, alignItems: "baseline" }}>
-        <span className="muted" style={{ fontSize: 13 }}>
+        <span className="muted" style={{ fontSize: 14 }}>
           darker = more &middot;
         </span>
         <button

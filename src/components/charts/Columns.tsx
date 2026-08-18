@@ -98,7 +98,7 @@ export default function Columns({
                   strokeWidth={1}
                 />
               )}
-              <text x={PAD_L - 7} y={sy(t) + 3.5} textAnchor="end" fontSize={11} fill={AXIS_TEXT}>
+              <text x={PAD_L - 7} y={sy(t) + 3.5} textAnchor="end" fontSize={12} fill={AXIS_TEXT}>
                 {t}
               </text>
             </g>
@@ -138,7 +138,7 @@ export default function Columns({
                     x={x + colW / 2}
                     y={y - 5}
                     textAnchor="middle"
-                    fontSize={11}
+                    fontSize={12}
                     fill={AXIS_TEXT}
                   >
                     {d.count}
@@ -149,7 +149,7 @@ export default function Columns({
                     x={PAD_L + i * slot + slot / 2}
                     y={PAD_T + plotH + 15}
                     textAnchor="middle"
-                    fontSize={11}
+                    fontSize={12}
                     fill={AXIS_TEXT}
                   >
                     {d.label}

@@ -26,7 +26,7 @@ export default function MbtiGrid({ counts }: { counts: Record<string, number> })
       <div style={{ display: "grid", gap: 10 }}>
         {TYPES.map((row, ri) => (
           <div key={ri}>
-            <div className="muted" style={{ fontSize: 12, fontStyle: "italic", marginBottom: 3 }}>
+            <div className="muted" style={{ fontSize: 13, fontStyle: "italic", marginBottom: 3 }}>
               {ROLES[ri]}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
@@ -53,7 +53,7 @@ export default function MbtiGrid({ counts }: { counts: Record<string, number> })
                     <div
                       className="sans"
                       style={{
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: 600,
                         color: dark ? "#fff" : "var(--text-primary)",
                       }}
@@ -62,7 +62,7 @@ export default function MbtiGrid({ counts }: { counts: Record<string, number> })
                     </div>
                     <div
                       className="tnum"
-                      style={{ fontSize: 12, color: dark ? "rgba(255,255,255,.75)" : "var(--text-muted)" }}
+                      style={{ fontSize: 13, color: dark ? "rgba(255,255,255,.75)" : "var(--text-muted)" }}
                     >
                       {c || "–"}
                     </div>

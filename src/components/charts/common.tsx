@@ -11,7 +11,7 @@ export const SURFACE = "#ffffff";
 
 /** shared axis-title text style — plain sans, no italics */
 export const AXIS_TITLE_PROPS = {
-  fontSize: 12,
+  fontSize: 13,
   fill: "#404040",
 };
 

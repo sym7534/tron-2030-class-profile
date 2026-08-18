@@ -67,7 +67,7 @@ export default function BarsH({ data, total, totalLabel = "of answers", maxRows 
                 x={sx(t)}
                 y={rowsH + 13}
                 textAnchor="middle"
-                fontSize={11}
+                fontSize={12}
                 fill={AXIS_TEXT}
               >
                 {t}
@@ -95,7 +95,7 @@ export default function BarsH({ data, total, totalLabel = "of answers", maxRows 
                   x={LABEL_W - 10}
                   y={y + ROW_H / 2 + 4}
                   textAnchor="end"
-                  fontSize={12.5}
+                  fontSize={13.5}
                   fontFamily="var(--serif)"
                   fill="var(--text-secondary)"
                 >
@@ -105,7 +105,7 @@ export default function BarsH({ data, total, totalLabel = "of answers", maxRows 
                 <text
                   x={LABEL_W + w + 7}
                   y={y + ROW_H / 2 + 4}
-                  fontSize={11.5}
+                  fontSize={12.5}
                   fill={AXIS_TEXT}
                 >
                   {d.count}
@@ -119,7 +119,7 @@ export default function BarsH({ data, total, totalLabel = "of answers", maxRows 
         </svg>
       )}
       {hidden > 0 && (
-        <div className="muted" style={{ fontSize: 13, fontStyle: "italic", marginTop: 4 }}>
+        <div className="muted" style={{ fontSize: 14, fontStyle: "italic", marginTop: 4 }}>
           + {hidden} more
         </div>
       )}

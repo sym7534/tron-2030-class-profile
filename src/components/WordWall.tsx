@@ -59,7 +59,7 @@ export default function WordWall({ values, mode = "wall" }: Props) {
             key={g.text}
             style={{
               fontFamily: "var(--display)",
-              fontSize: i % 3 === 0 ? 34 : i % 3 === 1 ? 24 : 19,
+              fontSize: i % 3 === 0 ? 36 : i % 3 === 1 ? 26 : 20,
               lineHeight: 1.2,
               color: i % 2 === 0 ? "var(--text-primary)" : "var(--text-secondary)",
               overflowWrap: "anywhere",
@@ -81,7 +81,7 @@ export default function WordWall({ values, mode = "wall" }: Props) {
               key={g.text}
               style={{
                 fontStyle: "italic",
-                fontSize: 16,
+                fontSize: 17,
                 color: "var(--text-secondary)",
                 borderLeft: "1px solid var(--border-card)",
                 paddingLeft: 14,
@@ -99,7 +99,7 @@ export default function WordWall({ values, mode = "wall" }: Props) {
   }
 
   return (
-    <div style={{ fontSize: 15, lineHeight: 2, color: "var(--text-secondary)" }}>
+    <div style={{ fontSize: 16, lineHeight: 2, color: "var(--text-secondary)" }}>
       {grouped.map((g, i) => (
         <span key={g.text} style={{ whiteSpace: "normal" }}>
           {i > 0 && <span className="muted"> · </span>}

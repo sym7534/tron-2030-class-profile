@@ -49,7 +49,7 @@ html {
 }
 
 body {
-  font-size: 1rem;
+  font-size: 1.0625rem;
   line-height: 1.6;
   background: var(--bg-white);
 }
@@ -72,7 +72,7 @@ a:hover {
 
 button {
   font-family: var(--serif);
-  font-size: 13px;
+  font-size: 14px;
   background: none;
   border: none;
   color: var(--text-muted);
@@ -93,7 +93,7 @@ input:focus-visible {
 
 select {
   font-family: var(--serif);
-  font-size: 15px;
+  font-size: 16px;
   color: var(--text-primary);
   background: var(--bg-white);
   border: none;
@@ -125,7 +125,7 @@ select:focus {
 
 /* lowercase section header with trailing em dash, per the design system */
 .section-header {
-  font-size: 15px;
+  font-size: 16px;
   color: var(--text-muted);
   text-transform: lowercase;
 }
@@ -163,7 +163,7 @@ select:focus {
   border-radius: 3px;
   padding: 6px 9px;
   font-family: var(--sans);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.45;
   color: var(--text-secondary);
   z-index: 10;
@@ -179,7 +179,7 @@ select:focus {
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 14px;
 }
 .data-table th {
   font-family: var(--serif);
@@ -218,11 +218,11 @@ select:focus {
 }
 .topnav a {
   text-decoration: none;
-  font-size: 13px;
+  font-size: 14px;
 }
 .topnav-brand {
   font-family: var(--display);
-  font-size: 15px;
+  font-size: 16px;
   color: var(--text-primary);
 }
 .topnav-links {
@@ -238,7 +238,7 @@ select:focus {
   padding: clamp(3rem, 9vh, 6.5rem) 24px clamp(2.5rem, 6vh, 4rem);
 }
 .hero-eyebrow {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-muted);
   margin-bottom: 18px;
 }
@@ -252,7 +252,7 @@ select:focus {
 }
 .hero-lede {
   color: var(--text-secondary);
-  font-size: 17px;
+  font-size: 18px;
   max-width: 560px;
   margin-bottom: 36px;
 }
@@ -274,13 +274,13 @@ select:focus {
   padding: 16px 18px;
 }
 .hero-stat-value {
-  font-size: 32px;
+  font-size: 33px;
   font-weight: 600;
   line-height: 1.1;
   font-variant-numeric: normal; /* proportional figures at display size */
 }
 .hero-stat-label {
-  font-size: 13px;
+  font-size: 14px;
   margin-top: 5px;
 }
 
@@ -294,12 +294,12 @@ select:focus {
 .section-blurb {
   color: var(--text-muted);
   font-style: italic;
-  font-size: 15px;
+  font-size: 16px;
   max-width: 560px;
   margin: 6px 0 26px;
 }
 .chapter-count {
-  font-size: 13px;
+  font-size: 14px;
   margin-top: 2px;
   margin-bottom: 24px;
 }
@@ -327,7 +327,7 @@ select:focus {
   padding: clamp(3rem, 8vh, 5rem) 24px 3rem;
   display: grid;
   gap: 12px;
-  font-size: 14px;
+  font-size: 15px;
 }
 .page-footer > p:first-child {
   border-top: 1px solid var(--border-card);
@@ -349,7 +349,7 @@ select:focus {
   margin-bottom: 24px;
 }
 .preset-lead {
-  font-size: 13px;
+  font-size: 14px;
   font-style: italic;
 }
 .axis-row {
@@ -365,12 +365,12 @@ select:focus {
   gap: 8px;
 }
 .axis-label {
-  font-size: 13px;
+  font-size: 14px;
   font-style: italic;
   color: var(--text-muted);
 }
 .swap {
-  font-size: 16px;
+  font-size: 17px;
 }
 .builder-title {
   font-family: var(--display);
@@ -382,7 +382,7 @@ select:focus {
 .preset-blurb {
   color: var(--text-muted);
   font-style: italic;
-  font-size: 15px;
+  font-size: 16px;
   margin-bottom: 14px;
 }
 .ctl-row {
@@ -395,7 +395,7 @@ select:focus {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-family: var(--serif);
   color: var(--text-secondary);
   cursor: pointer;
@@ -439,7 +439,7 @@ select:focus {
   margin-top: 8px;
 }
 .chart-caption {
-  font-size: 13px;
+  font-size: 14px;
 }
 .chart-views {
   display: inline-flex;
@@ -447,7 +447,7 @@ select:focus {
   flex-shrink: 0;
 }
 .chart-note {
-  font-size: 12.5px;
+  font-size: 13.5px;
   color: var(--text-muted);
   font-style: italic;
   margin-top: 6px;
@@ -476,7 +476,7 @@ select:focus {
   flex-wrap: wrap;
   gap: 4px 18px;
   margin-top: 10px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-secondary);
 }
 .waffle-key {
@@ -505,7 +505,7 @@ select:focus {
 .pie-legend {
   display: grid;
   gap: 6px;
-  font-size: 13.5px;
+  font-size: 14.5px;
   color: var(--text-secondary);
   min-width: 150px;
 }

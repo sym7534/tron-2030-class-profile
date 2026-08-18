@@ -61,7 +61,7 @@ export default function Strip({ rows, numField, rowH: rowHProp }: Props) {
                 stroke={GRID}
                 strokeWidth={1}
               />
-              <text x={sx(t)} y={height - PAD_B + 15} textAnchor="middle" fontSize={11} fill={AXIS_TEXT}>
+              <text x={sx(t)} y={height - PAD_B + 15} textAnchor="middle" fontSize={12} fill={AXIS_TEXT}>
                 {numField.kind === "date"
                   ? fmtValue(numField, t)
                   : Math.abs(t) >= 1000
@@ -101,13 +101,13 @@ export default function Strip({ rows, numField, rowH: rowHProp }: Props) {
                   x={PAD_L - 10}
                   y={cy - 2}
                   textAnchor="end"
-                  fontSize={12.5}
+                  fontSize={13.5}
                   fontFamily="var(--serif)"
                   fill="var(--text-secondary)"
                 >
                   {row.label.length > 22 ? row.label.slice(0, 21) + "…" : row.label}
                 </text>
-                <text x={PAD_L - 10} y={cy + 12} textAnchor="end" fontSize={10.5} fill={AXIS_TEXT}>
+                <text x={PAD_L - 10} y={cy + 12} textAnchor="end" fontSize={11.5} fill={AXIS_TEXT}>
                   n={row.values.length}
                 </text>
                 {row.values.map((p) => (
@@ -166,7 +166,7 @@ export default function Strip({ rows, numField, rowH: rowHProp }: Props) {
                       x={width - 4}
                       y={cy + 4}
                       textAnchor="end"
-                      fontSize={11}
+                      fontSize={12}
                       fill={AXIS_TEXT}
                     >
                       {fmtValue(numField, med)}
@@ -178,7 +178,7 @@ export default function Strip({ rows, numField, rowH: rowHProp }: Props) {
           })}
         </svg>
       )}
-      <div className="muted" style={{ fontSize: 12.5, marginTop: 4, fontStyle: "italic" }}>
+      <div className="muted" style={{ fontSize: 13.5, marginTop: 4, fontStyle: "italic" }}>
         thick tick &amp; right-hand figure = median per row
       </div>
       <Tooltip tip={tip} width={width} />

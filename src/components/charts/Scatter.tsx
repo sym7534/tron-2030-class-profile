@@ -126,7 +126,7 @@ export default function Scatter({ points, xField, yField, height = 320, identity
           {yTicks.map((t) => (
             <g key={`y${t}`}>
               <line x1={PAD_L} y1={sy(t)} x2={width - PAD_R} y2={sy(t)} stroke={GRID} strokeWidth={1} />
-              <text x={PAD_L - 7} y={sy(t) + 3.5} textAnchor="end" fontSize={11} fill={AXIS_TEXT}>
+              <text x={PAD_L - 7} y={sy(t) + 3.5} textAnchor="end" fontSize={12} fill={AXIS_TEXT}>
                 {fmtAxis(yField, t)}
               </text>
             </g>
@@ -134,7 +134,7 @@ export default function Scatter({ points, xField, yField, height = 320, identity
           {xTicks.map((t) => (
             <g key={`x${t}`}>
               <line x1={sx(t)} y1={PAD_T} x2={sx(t)} y2={PAD_T + plotH} stroke={GRID} strokeWidth={1} />
-              <text x={sx(t)} y={PAD_T + plotH + 15} textAnchor="middle" fontSize={11} fill={AXIS_TEXT}>
+              <text x={sx(t)} y={PAD_T + plotH + 15} textAnchor="middle" fontSize={12} fill={AXIS_TEXT}>
                 {fmtAxis(xField, t)}
               </text>
             </g>
@@ -202,7 +202,7 @@ export default function Scatter({ points, xField, yField, height = 320, identity
           ))}
         </svg>
       )}
-      <div className="muted" style={{ fontSize: 12.5, marginTop: 4, fontStyle: "italic" }}>
+      <div className="muted" style={{ fontSize: 13.5, marginTop: 4, fontStyle: "italic" }}>
         {identity && <>thin gray line is y = x</>}
         {identity && (jx > 0 || jy > 0) && <> &middot; </>}
         {(jx > 0 || jy > 0) && <>dots nudged apart where answers overlap</>}

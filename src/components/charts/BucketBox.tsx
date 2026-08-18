@@ -112,7 +112,7 @@ export default function BucketBox({
               {grid && (
                 <line x1={PAD_L} y1={sy(t)} x2={width - PAD_R} y2={sy(t)} stroke={GRID} strokeWidth={1} />
               )}
-              <text x={PAD_L - 7} y={sy(t) + 3.5} textAnchor="end" fontSize={11.5} fill={AXIS_TEXT}>
+              <text x={PAD_L - 7} y={sy(t) + 3.5} textAnchor="end" fontSize={12.5} fill={AXIS_TEXT}>
                 {fmtShort(t)}
               </text>
             </g>
@@ -210,7 +210,7 @@ export default function BucketBox({
                 <text
                   x={cx + BOX_W / 2 + 7}
                   y={meanY}
-                  fontSize={12}
+                  fontSize={13}
                   fontWeight={600}
                   fill="#171717"
                   className="tnum"
@@ -220,20 +220,20 @@ export default function BucketBox({
                 {/* min / max labels — same column and size as the mean; skipped when
                     they'd collide with the mean label (values stay in the tooltip/table) */}
                 {Math.abs(maxY - meanY) > 13 && (
-                  <text x={cx + BOX_W / 2 + 7} y={maxY} fontSize={12} fill="#404040" className="tnum">
+                  <text x={cx + BOX_W / 2 + 7} y={maxY} fontSize={13} fill="#404040" className="tnum">
                     {fmtShort(s.max)}
                   </text>
                 )}
                 {Math.abs(minY - meanY) > 13 && (
-                  <text x={cx + BOX_W / 2 + 7} y={minY} fontSize={12} fill="#404040" className="tnum">
+                  <text x={cx + BOX_W / 2 + 7} y={minY} fontSize={13} fill="#404040" className="tnum">
                     {fmtShort(s.min)}
                   </text>
                 )}
                 {/* bucket label + n */}
-                <text x={cx} y={PAD_T + plotH + 16} textAnchor="middle" fontSize={12} fill="#171717">
+                <text x={cx} y={PAD_T + plotH + 16} textAnchor="middle" fontSize={13} fill="#171717">
                   {s.label.length > 14 ? s.label.slice(0, 13) + "…" : s.label}
                 </text>
-                <text x={cx} y={PAD_T + plotH + 29} textAnchor="middle" fontSize={10.5} fill={AXIS_TEXT}>
+                <text x={cx} y={PAD_T + plotH + 29} textAnchor="middle" fontSize={11.5} fill={AXIS_TEXT}>
                   n={s.n}
                 </text>
               </g>
@@ -253,7 +253,7 @@ export default function BucketBox({
           </text>
         </svg>
       )}
-      <div className="secondary" style={{ fontSize: 13, marginTop: 6 }}>
+      <div className="secondary" style={{ fontSize: 14, marginTop: 6 }}>
         {showSd1 ? (
           <>
             <svg width={11} height={13} aria-hidden style={{ verticalAlign: "-2px", marginRight: 4 }}>
