@@ -243,8 +243,8 @@ export default function QuestionCard({ id, qNum }: { id: string; qNum?: number }
           style={{ fontSize: 12, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}
         >
           {qNum ? `Q${String(qNum).padStart(2, "0")}` : ""}{" "}
-          <span style={{ float: "right" }} className="tnum">
-            n = {answered}
+          <span style={{ float: "right", textTransform: "none", color: "#a3a3a3" }} className="tnum">
+            {answered} answer{answered === 1 ? "" : "s"}
           </span>
         </div>
         <h3 style={{ fontSize: 18, fontWeight: 400, lineHeight: 1.35 }}>{f.label}</h3>

@@ -50,11 +50,4 @@ export const PRESETS: Preset[] = [
   { name: "money vs. marks", quip: "first-year average vs. co-op wage", x: "cumAvg", y: "wage" },
   { name: "show up, cash out", quip: "1A attendance vs. 1A average", x: "attend1A", y: "avg1A" },
   { name: "the corruption arc", quip: "rice purity, before vs. after Waterloo", x: "ricePurity", y: "riceWaterloo", identity: true },
-  { name: "caffeine economy", quip: "daily caffeine vs. first-year average", x: "caffeine", y: "cumAvg" },
-  { name: "sleep is optional", quip: "all-nighters vs. longest time awake", x: "allNighters", y: "longestAwake" },
-  { name: "tab hoarders", quip: "open tabs vs. first-year average", x: "tabs", y: "cumAvg" },
-  { name: "keeners got in early?", quip: "acceptance date vs. admission average", x: "accepted", y: "applyAvg" },
-  { name: "residence politics", quip: "where you lived vs. what you call the best residence", x: "residence", y: "bestRes" },
-  { name: "milk-first maniacs", quip: "cereal order vs. rating Waterloo as a city", x: "cerealMilk", y: "rateCity" },
-  { name: "tall confidence", quip: "height vs. confidence tron was the right call", x: "heightCm", y: "confidence" },
 ];

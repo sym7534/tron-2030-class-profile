@@ -106,7 +106,7 @@ export default function GraphBuilder() {
   // dashboard display toggles
   const [grid, setGrid] = useState(true);
   const [sd1, setSd1] = useState(true);
-  const [sd2, setSd2] = useState(true);
+  const [sd2, setSd2] = useState(false);
   const [gridMinor, setGridMinor] = useState(false);
   const [bucketN, setBucketN] = useState(5);
 
