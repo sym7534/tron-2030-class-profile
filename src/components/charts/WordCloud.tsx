@@ -47,15 +47,37 @@ function mulberry32(seed: number) {
 
 const FONT = "Lora, Georgia, serif";
 
-function fontSize(count: number, maxCount: number): number {
-  if (maxCount <= 1) return 16;
-  return 14 + ((count - 1) / (maxCount - 1)) * 22; // 14 → 36
+/** stable per-phrase 0..1 hash — gives every entry its own size/shade personality */
+function hash01(text: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return ((h >>> 0) % 1000) / 1000;
 }
 
-function fill(count: number): string {
+function fontSize(count: number, maxCount: number, t: number): number {
+  // hash jitter keeps all-unique clouds lively; kept small when real
+  // duplicates exist so count still dominates the visual order
+  if (maxCount <= 1) return 14 + t * 13; // 14 → 27
+  const base = 15 + ((count - 1) / (maxCount - 1)) * 21; // 15 → 36
+  return base + t * (count > 1 ? 2 : 4);
+}
+
+function fill(count: number, t: number): string {
   if (count >= 3) return "#171717";
-  if (count === 2) return "#404040";
-  return "#6e6e6e";
+  if (count === 2) return "#333333";
+  // singles fan out across the gray ramp by hash
+  if (t > 0.78) return "#1f1f1f";
+  if (t > 0.52) return "#454545";
+  if (t > 0.26) return "#6b6b6b";
+  return "#8f8f8f";
+}
+
+function weight(count: number, t: number): number {
+  if (count > 1) return 600;
+  return t > 0.6 ? 500 : 400;
 }
 
 /** phrase cloud — each unique answer is one item, sized by how many gave it */
@@ -73,7 +95,7 @@ export default function WordCloud({ entries, height = 320 }: Props) {
         entries.map((e) => ({
           text: e.text,
           count: e.count,
-          size: fontSize(e.count, maxCount),
+          size: fontSize(e.count, maxCount, hash01(e.text)),
         }))
       )
       .padding(3)
@@ -111,8 +133,8 @@ export default function WordCloud({ entries, height = 320 }: Props) {
                 textAnchor="middle"
                 style={{ fontFamily: FONT }}
                 fontSize={w.size}
-                fontWeight={w.count > 1 ? 600 : 400}
-                fill={fill(w.count)}
+                fontWeight={weight(w.count, hash01(w.text))}
+                fill={fill(w.count, hash01(w.text))}
               >
                 {w.text}
                 <title>
