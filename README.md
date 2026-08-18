@@ -9,11 +9,15 @@ plus a graphic for every one of the 78 questions.
 ```sh
 npm install
 npm run build     # parses the xlsx -> survey.json, then builds the static site
-npx serve out     # or deploy the out/ folder anywhere (Vercel, GitHub Pages, …)
+npm run preview   # serves out/ at http://localhost:3300
 ```
 
-`npm run dev` for local development. `npm run data` re-runs just the spreadsheet
-pipeline (`scripts/build-data.mjs`) if the survey file changes.
+Or deploy the `out/` folder anywhere (Vercel, GitHub Pages, Netlify).
+
+`npm run preview` is the reliable way to view the site on Windows — `npm run dev`
+trips over the out-of-OneDrive build directory (see the note below). `npm run data`
+re-runs just the spreadsheet pipeline (`scripts/build-data.mjs`) if the survey
+file changes.
 
 ## How it's put together
 

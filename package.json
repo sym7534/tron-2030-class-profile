@@ -7,7 +7,8 @@
     "dev": "next dev",
     "build": "npm run data && next build && node scripts/copy-out.mjs",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "preview": "node scripts/preview.cjs"
   },
   "dependencies": {
     "next": "^15.4.6",
