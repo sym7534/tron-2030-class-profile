@@ -92,11 +92,11 @@ function bucketTable(buckets: Bucket[], yf: Field) {
 }
 
 export default function GraphBuilder() {
-  const [xId, setXId] = useState("applyAvg");
-  const [yId, setYId] = useState("avg1A");
+  const [xId, setXId] = useState("cumAvg");
+  const [yId, setYId] = useState("wage");
   const [filterId, setFilterId] = useState("");
   const [filterVal, setFilterVal] = useState("");
-  const [preset, setPreset] = useState<string | null>("the great deflation");
+  const [preset, setPreset] = useState<string | null>("money vs. marks");
   // dashboard display toggles
   const [grid, setGrid] = useState(true);
   const [sd1, setSd1] = useState(true);
