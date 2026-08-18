@@ -38,7 +38,7 @@ export default function Home() {
           tron 2030
         </a>
         <span className="topnav-links">
-          <a href="#builder">the instrument</a>
+          <a href="#top">home</a>
           {SECTIONS.map((s) => (
             <a key={s.id} href={`#${s.id}`}>
               {s.title}
