@@ -123,6 +123,11 @@ export default function BucketBox({
 
           {stats.map((s, i) => {
             const cx = PAD_L + i * slot + slot / 2;
+            // label baselines lift off the x-axis so a value of 0 never sits on the line
+            const labelY = (v: number) => Math.min(sy(v) + 4, PAD_T + plotH - 5);
+            const meanY = labelY(s.mean);
+            const maxY = labelY(s.max);
+            const minY = labelY(s.min);
             return (
               <g
                 key={s.label}
@@ -204,7 +209,7 @@ export default function BucketBox({
                 />
                 <text
                   x={cx + BOX_W / 2 + 7}
-                  y={sy(s.mean) + 4}
+                  y={meanY}
                   fontSize={12}
                   fontWeight={600}
                   fill="#171717"
@@ -214,13 +219,13 @@ export default function BucketBox({
                 </text>
                 {/* min / max labels — same column and size as the mean; skipped when
                     they'd collide with the mean label (values stay in the tooltip/table) */}
-                {Math.abs(sy(s.max) - sy(s.mean)) > 13 && (
-                  <text x={cx + BOX_W / 2 + 7} y={sy(s.max) + 4} fontSize={12} fill="#404040" className="tnum">
+                {Math.abs(maxY - meanY) > 13 && (
+                  <text x={cx + BOX_W / 2 + 7} y={maxY} fontSize={12} fill="#404040" className="tnum">
                     {fmtShort(s.max)}
                   </text>
                 )}
-                {Math.abs(sy(s.min) - sy(s.mean)) > 13 && (
-                  <text x={cx + BOX_W / 2 + 7} y={sy(s.min) + 4} fontSize={12} fill="#404040" className="tnum">
+                {Math.abs(minY - meanY) > 13 && (
+                  <text x={cx + BOX_W / 2 + 7} y={minY} fontSize={12} fill="#404040" className="tnum">
                     {fmtShort(s.min)}
                   </text>
                 )}
