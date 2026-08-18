@@ -315,42 +315,49 @@ export default function GraphBuilder() {
       );
       table = bucketTable(buckets, numF);
     } else {
-      // ---- heatmap (category x category)
-      const xLabels = distribution(xf, rows).slice(0, 10);
-      const yLabels = distribution(yf, rows).slice(0, 10);
-      const cells = xLabels.flatMap((xd) =>
-        yLabels.map((yd) => ({
-          x: shortCat(xf, xd.label),
-          y: shortCat(yf, yd.label),
-          count: rows.filter(
-            (r) =>
-              categoriesOf(r, xf).includes(xd.label) && categoriesOf(r, yf).includes(yd.label)
-          ).length,
-        }))
+      // ---- heatmap (category x category) — overflow pools into "everything else"
+      const MAX_HEAT = 10;
+      const packAxis = (f: Field) => {
+        const dist = distribution(f, rows);
+        const kept = dist.slice(0, MAX_HEAT - (dist.length > MAX_HEAT ? 1 : 0));
+        const rest = dist.slice(kept.length).map((d) => d.label);
+        const labels = [
+          ...kept.map((d) => shortCat(f, d.label)),
+          ...(rest.length ? [`everything else (${rest.length})`] : []),
+        ];
+        /** raw category labels belonging to each display label */
+        const groupOf = (raw: string) =>
+          rest.includes(raw) ? labels[labels.length - 1] : shortCat(f, raw);
+        return { labels, groupOf, pooled: rest.length };
+      };
+      const xa = packAxis(xf);
+      const ya = packAxis(yf);
+      const counts = new Map<string, number>();
+      for (const r of rows) {
+        for (const xc of categoriesOf(r, xf)) {
+          for (const yc of categoriesOf(r, yf)) {
+            const k = xa.groupOf(xc) + "\u0000" + ya.groupOf(yc);
+            counts.set(k, (counts.get(k) ?? 0) + 1);
+          }
+        }
+      }
+      const cells = xa.labels.flatMap((x) =>
+        ya.labels.map((y) => ({ x, y, count: counts.get(x + "\u0000" + y) ?? 0 }))
       );
-      body = (
-        <Heatmap
-          xLabels={xLabels.map((d) => shortCat(xf, d.label))}
-          yLabels={yLabels.map((d) => shortCat(yf, d.label))}
-          cells={cells}
-        />
-      );
+      body = <Heatmap xLabels={xa.labels} yLabels={ya.labels} cells={cells} />;
       caption = (
         <>
-          top {xLabels.length} &times; {yLabels.length} answers &middot; n ={" "}
-          <span className="tnum">{rows.length}</span>
+          every answer counted &middot; n = <span className="tnum">{rows.length}</span>
+          {(xa.pooled > 0 || ya.pooled > 0) && (
+            <> &middot; rare answers pooled into &ldquo;everything else&rdquo;</>
+          )}
         </>
       );
       table = {
-        headers: [yf.short, ...xLabels.map((d) => shortCat(xf, d.label))],
-        rows: yLabels.map((yd) => [
-          shortCat(yf, yd.label),
-          ...xLabels.map(
-            (xd) =>
-              cells.find(
-                (c) => c.x === shortCat(xf, xd.label) && c.y === shortCat(yf, yd.label)
-              )?.count ?? 0
-          ),
+        headers: [yf.short, ...xa.labels],
+        rows: ya.labels.map((y) => [
+          y,
+          ...xa.labels.map((x) => counts.get(x + "\u0000" + y) ?? 0),
         ]),
       };
     }

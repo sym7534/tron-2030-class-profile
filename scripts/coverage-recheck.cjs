@@ -138,6 +138,35 @@ const survey = JSON.parse(fs.readFileSync("src/data/survey.json", "utf8"));
   console.log(aggOk ? "table is aggregate-only OK" : `FAIL: table leaks persons (${personRows})`);
   if (!aggOk) failures++;
 
+  // ---------- 4. heatmap full coverage: fav1A × residence (residence has >10 cats)
+  await p.selectOption("#x-axis", "residence");
+  await p.selectOption("#y-axis", "attend1A");
+  await p.waitForTimeout(500);
+  const heatTotal = await p.evaluate(() => {
+    // switch to table view for exact numbers
+    [...document.querySelectorAll(".builder .chart-views button")]
+      .find((b) => b.innerText.trim() === "table")
+      ?.click();
+    return new Promise((res) =>
+      setTimeout(() => {
+        const cells = [...document.querySelectorAll(".builder .data-table tbody td")]
+          .map((c) => parseInt(c.innerText, 10))
+          .filter((v) => Number.isFinite(v));
+        res(cells.reduce((a, b) => a + b, 0));
+      }, 250)
+    );
+  });
+  const expectHeat = survey.rows.reduce((a, r) => {
+    const xs = Array.isArray(r.residence) ? r.residence : r.residence ? [r.residence] : [];
+    const ys = Array.isArray(r.attend1A) ? r.attend1A : r.attend1A ? [r.attend1A] : [];
+    return a + xs.length * ys.length;
+  }, 0);
+  console.log(`heatmap coverage: table total ${heatTotal}, expected cross-pairs ${expectHeat}`);
+  if (heatTotal !== expectHeat) {
+    console.log("  HEATMAP COVERAGE FAIL");
+    failures++;
+  }
+
   await b.close();
   server.close();
   console.log(failures === 0 ? "COVERAGE RECHECK PASS" : `COVERAGE RECHECK: ${failures} failures`);
