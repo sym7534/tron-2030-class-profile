@@ -45,6 +45,7 @@ const CLOUD_IDS = new Set([
   "game",
   "artist",
   "song",
+  "company",
   "dreamCompany",
   "liveCarefree",
   "foodSpot",
