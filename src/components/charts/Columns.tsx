@@ -11,6 +11,8 @@ import {
   useTooltip,
   Tooltip,
   countDomain,
+  minorTicks,
+  MINOR_GRID,
 } from "./common";
 
 export interface ColumnDatum {
@@ -29,13 +31,22 @@ interface Props {
   yTitle?: string;
   /** show horizontal gridlines (the zero axis-line always draws) */
   grid?: boolean;
+  gridMinor?: boolean;
 }
 
 const PAD_L = 46;
 const PAD_R = 8;
 const MAX_COL_W = 24; // dataviz spec: bars never thicker than 24px
 
-export default function Columns({ data, height = 200, capLabels, xTitle, yTitle, grid = true }: Props) {
+export default function Columns({
+  data,
+  height = 200,
+  capLabels,
+  xTitle,
+  yTitle,
+  grid = true,
+  gridMinor = false,
+}: Props) {
   const [ref, width] = useMeasure<HTMLDivElement>();
   const { tip, show, hide } = useTooltip();
 
@@ -58,6 +69,23 @@ export default function Columns({ data, height = 200, capLabels, xTitle, yTitle,
       {width > 0 && (
         <svg className="chart-svg" width={width} height={height} role="img">
           {/* horizontal gridlines at every labeled tick, axis-line at zero */}
+          {gridMinor &&
+            (() => {
+              // counts are integers: subdivide only where minors land on whole numbers
+              const step = ticks.length > 1 ? ticks[1] - ticks[0] : 0;
+              const div = step % 5 === 0 ? 5 : step % 2 === 0 ? 2 : 0;
+              return minorTicks(ticks, div).map((t) => (
+                <line
+                  key={`m${t}`}
+                  x1={PAD_L}
+                  y1={sy(t)}
+                  x2={width - PAD_R}
+                  y2={sy(t)}
+                  stroke={MINOR_GRID}
+                  strokeWidth={1}
+                />
+              ));
+            })()}
           {ticks.map((t) => (
             <g key={t}>
               {(grid || t === 0) && (

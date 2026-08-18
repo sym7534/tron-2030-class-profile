@@ -40,18 +40,24 @@ const isCat = (f: Field | null) =>
 const MAX_CAT_ROWS = 12;
 
 /** bucket numeric x values into clean ranges — every pair lands in a bucket */
-function numericBuckets(pairs: { x: number; y: number }[], xf: Field, dense = false): Bucket[] {
+function numericBuckets(
+  pairs: { x: number; y: number }[],
+  xf: Field,
+  bucketCount = 5
+): Bucket[] {
   const xs = pairs.map((p) => p.x);
-  let edges: number[];
+  const nB = Math.max(1, Math.min(10, Math.round(bucketCount)));
+  const edges: number[] = [];
   if (xf.intScale && xf.intScale[1] - xf.intScale[0] <= 10) {
-    // small integer scales: pair up values (1-2, 3-4, ...); dense = one per value
+    // small integer scales: split the value range into nB equal integer runs
     const [lo, hi] = xf.intScale;
-    const step = dense ? 1 : 2;
-    edges = [];
+    const step = Math.ceil((hi - lo + 1) / nB);
     for (let v = lo; v <= hi + 1; v += step) edges.push(v - 0.5);
+    if (edges[edges.length - 1] < hi + 0.5) edges.push(hi + 0.5);
   } else {
-    const { lo, hi, ticks } = niceDomain(xs, { target: dense ? 10 : 5 });
-    edges = ticks.length >= 3 ? ticks : [lo, (lo + hi) / 2, hi];
+    // equal-width buckets over a tick-snapped overall range
+    const { lo, hi } = niceDomain(xs, { target: 5 });
+    for (let i = 0; i <= nB; i++) edges.push(lo + ((hi - lo) * i) / nB);
   }
   const buckets: Bucket[] = [];
   for (let i = 0; i < edges.length - 1; i++) {
@@ -101,7 +107,8 @@ export default function GraphBuilder() {
   const [grid, setGrid] = useState(true);
   const [sd1, setSd1] = useState(true);
   const [sd2, setSd2] = useState(true);
-  const [dense, setDense] = useState(false);
+  const [gridMinor, setGridMinor] = useState(false);
+  const [bucketN, setBucketN] = useState(5);
 
   const xf: Field | null = xId === COUNT ? null : (fieldById[xId] ?? null);
   const yf: Field | null = yId === COUNT ? null : (fieldById[yId] ?? null);
@@ -195,10 +202,10 @@ export default function GraphBuilder() {
       const values = rows
         .map((r) => numericOf(r, f))
         .filter((v): v is number => v !== null && Number.isFinite(v));
-      body = values.length ? <Histogram field={f} values={values} grid={grid} /> : null;
+      body = values.length ? <Histogram field={f} values={values} grid={grid} gridMinor={grid && gridMinor} /> : null;
       caption = (
         <>
-          how many people gave each answer &middot; n = <span className="tnum">{n}</span>
+          # of responses = <span className="tnum">{n}</span>
         </>
       );
       table = {
@@ -225,8 +232,8 @@ export default function GraphBuilder() {
       );
       caption = (
         <>
-          n = <span className="tnum">{n}</span>
-          {f.kind === "multi" && <> &middot; pick-many, so bars sum past 100%</>}
+          # of responses = <span className="tnum">{n}</span>
+          {f.kind === "multi" && <> &middot; pick-many</>}
         </>
       );
       table = {
@@ -251,7 +258,7 @@ export default function GraphBuilder() {
         })
         .filter((p): p is { x: number; y: number } => p !== null);
       const r = pearson(pts.map((p) => [p.x, p.y] as [number, number]));
-      const buckets = numericBuckets(pts, xf, dense);
+      const buckets = numericBuckets(pts, xf, bucketN);
       body = buckets.length ? (
         <BucketBox
           buckets={buckets}
@@ -259,6 +266,7 @@ export default function GraphBuilder() {
           xTitle={axisLabel(xf)}
           height={400}
           grid={grid}
+          gridMinor={grid && gridMinor}
           showSd1={sd1}
           showSd2={sd2}
         />
@@ -269,12 +277,10 @@ export default function GraphBuilder() {
       );
       caption = (
         <>
-          answers grouped into buckets &middot; n = <span className="tnum">{pts.length}</span>{" "}
-          (everyone who answered both)
+          # of responses = <span className="tnum">{pts.length}</span>
           {r !== null && (
             <>
-              {" "}
-              &middot; r = <span className="tnum">{r.toFixed(2)}</span>,{" "}
+              , r = <span className="tnum">{r.toFixed(2)}</span>,{" "}
               {Math.abs(r) < 0.15
                 ? "essentially unrelated"
                 : Math.abs(r) < 0.35
@@ -322,6 +328,7 @@ export default function GraphBuilder() {
           xTitle={axisLabel(catF)}
           height={400}
           grid={grid}
+          gridMinor={grid && gridMinor}
           showSd1={sd1}
           showSd2={sd2}
         />
@@ -332,12 +339,8 @@ export default function GraphBuilder() {
       );
       caption = (
         <>
-          groups sorted by mean &middot; n = <span className="tnum">{shown}</span>
-          {allGroups.length > MAX_CAT_ROWS && (
-            <> &middot; small categories pooled into &ldquo;everything else&rdquo;</>
-          )}
-          {catF.kind === "multi" && <> &middot; pick-many, so people appear in several groups</>}
-          {isNum(xf) && <> &middot; axes swapped so the categories can be read</>}
+          # of responses = <span className="tnum">{shown}</span> &middot; sorted by mean
+          {catF.kind === "multi" && <> &middot; pick-many</>}
         </>
       );
       table = bucketTable(buckets, numF);
@@ -374,10 +377,7 @@ export default function GraphBuilder() {
       body = <Heatmap xLabels={xa.labels} yLabels={ya.labels} cells={cells} />;
       caption = (
         <>
-          every answer counted &middot; n = <span className="tnum">{rows.length}</span>
-          {(xa.pooled > 0 || ya.pooled > 0) && (
-            <> &middot; rare answers pooled into &ldquo;everything else&rdquo;</>
-          )}
+          # of responses = <span className="tnum">{rows.length}</span>
         </>
       );
       table = {
@@ -503,32 +503,6 @@ export default function GraphBuilder() {
         </span>
       </div>
 
-      {hasGridChart && (
-        <div className="ctl-row" role="group" aria-label="display options">
-          <label className="ctl-check">
-            <input type="checkbox" checked={grid} onChange={(e) => setGrid(e.target.checked)} />
-            gridlines
-          </label>
-          {hasBoxChart && (
-            <>
-              <label className="ctl-check">
-                <input type="checkbox" checked={sd1} onChange={(e) => setSd1(e.target.checked)} />
-                ± 1σ box
-              </label>
-              <label className="ctl-check">
-                <input type="checkbox" checked={sd2} onChange={(e) => setSd2(e.target.checked)} />
-                ± 2σ line
-              </label>
-            </>
-          )}
-          {isBucketNum && (
-            <label className="ctl-check">
-              <input type="checkbox" checked={dense} onChange={(e) => setDense(e.target.checked)} />
-              more buckets
-            </label>
-          )}
-        </div>
-      )}
 
       <h3 className="builder-title">
         {title}
@@ -544,6 +518,51 @@ export default function GraphBuilder() {
       <ChartFrame caption={caption} table={table}>
         {body}
       </ChartFrame>
+
+      {hasGridChart && (
+        <div className="ctl-row" role="group" aria-label="display options">
+          <label className="ctl-check">
+            <input type="checkbox" checked={grid} onChange={(e) => setGrid(e.target.checked)} />
+            gridlines
+          </label>
+          <label className={grid ? "ctl-check" : "ctl-check ctl-disabled"}>
+            <input
+              type="checkbox"
+              checked={gridMinor}
+              disabled={!grid}
+              onChange={(e) => setGridMinor(e.target.checked)}
+            />
+            minor gridlines
+          </label>
+          {hasBoxChart && (
+            <>
+              <label className="ctl-check">
+                <input type="checkbox" checked={sd1} onChange={(e) => setSd1(e.target.checked)} />
+                ± 1σ box
+              </label>
+              <label className="ctl-check">
+                <input type="checkbox" checked={sd2} onChange={(e) => setSd2(e.target.checked)} />
+                ± 2σ line
+              </label>
+            </>
+          )}
+          {isBucketNum && (
+            <label className="ctl-check">
+              buckets
+              <input
+                type="range"
+                min={1}
+                max={10}
+                step={1}
+                value={bucketN}
+                onChange={(e) => setBucketN(Number(e.target.value))}
+                aria-label="number of buckets"
+              />
+              <span className="tnum">{bucketN}</span>
+            </label>
+          )}
+        </div>
+      )}
 
       <div className="builder-foot">
         {filterVal && (

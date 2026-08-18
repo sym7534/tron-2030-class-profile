@@ -12,6 +12,8 @@ import {
   useTooltip,
   Tooltip,
   niceDomain,
+  minorTicks,
+  MINOR_GRID,
 } from "./common";
 
 export interface Bucket {
@@ -26,6 +28,7 @@ interface Props {
   height?: number;
   /** dashboard toggles */
   grid?: boolean;
+  gridMinor?: boolean;
   showSd1?: boolean;
   showSd2?: boolean;
 }
@@ -51,6 +54,7 @@ export default function BucketBox({
   xTitle,
   height = 380,
   grid = true,
+  gridMinor = false,
   showSd1 = true,
   showSd2 = true,
 }: Props) {
@@ -91,6 +95,18 @@ export default function BucketBox({
     <div ref={ref} style={{ position: "relative" }}>
       {width > 0 && (
         <svg className="chart-svg" width={width} height={height} role="img">
+          {gridMinor &&
+            minorTicks(ticks).map((t) => (
+              <line
+                key={`m${t}`}
+                x1={PAD_L}
+                y1={sy(t)}
+                x2={width - PAD_R}
+                y2={sy(t)}
+                stroke={MINOR_GRID}
+                strokeWidth={1}
+              />
+            ))}
           {ticks.map((t) => (
             <g key={t}>
               {grid && (
@@ -196,13 +212,18 @@ export default function BucketBox({
                 >
                   {fmtShort(s.mean)}
                 </text>
-                {/* min / max labels — same column and size as the mean */}
-                <text x={cx + BOX_W / 2 + 7} y={sy(s.max) + 4} fontSize={12} fill="#404040" className="tnum">
-                  {fmtShort(s.max)}
-                </text>
-                <text x={cx + BOX_W / 2 + 7} y={sy(s.min) + 4} fontSize={12} fill="#404040" className="tnum">
-                  {fmtShort(s.min)}
-                </text>
+                {/* min / max labels — same column and size as the mean; skipped when
+                    they'd collide with the mean label (values stay in the tooltip/table) */}
+                {Math.abs(sy(s.max) - sy(s.mean)) > 13 && (
+                  <text x={cx + BOX_W / 2 + 7} y={sy(s.max) + 4} fontSize={12} fill="#404040" className="tnum">
+                    {fmtShort(s.max)}
+                  </text>
+                )}
+                {Math.abs(sy(s.min) - sy(s.mean)) > 13 && (
+                  <text x={cx + BOX_W / 2 + 7} y={sy(s.min) + 4} fontSize={12} fill="#404040" className="tnum">
+                    {fmtShort(s.min)}
+                  </text>
+                )}
                 {/* bucket label + n */}
                 <text x={cx} y={PAD_T + plotH + 16} textAnchor="middle" fontSize={12} fill="#171717">
                   {s.label.length > 14 ? s.label.slice(0, 13) + "…" : s.label}

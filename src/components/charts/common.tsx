@@ -141,6 +141,18 @@ export function countDomain(max: number, target = 4): { hi: number; ticks: numbe
   return { hi, ticks };
 }
 
+/** faint lines between major ticks; excludes the majors themselves */
+export const MINOR_GRID = "#f4f4f4";
+export function minorTicks(ticks: number[], divisions = 5): number[] {
+  if (ticks.length < 2 || divisions < 2) return [];
+  const step = ticks[1] - ticks[0];
+  const out: number[] = [];
+  for (let i = 0; i < ticks.length - 1; i++) {
+    for (let d = 1; d < divisions; d++) out.push(ticks[i] + (step * d) / divisions);
+  }
+  return out;
+}
+
 export function extent(xs: number[], padFrac = 0.05): [number, number] {
   let lo = Math.min(...xs);
   let hi = Math.max(...xs);

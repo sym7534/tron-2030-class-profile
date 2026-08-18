@@ -389,7 +389,7 @@ select:focus {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 22px;
-  margin: -6px 0 18px;
+  margin: 12px 0 4px;
 }
 .ctl-check {
   display: inline-flex;
@@ -406,6 +406,15 @@ select:focus {
   height: 14px;
   margin: 0;
   cursor: pointer;
+}
+.ctl-check input[type="range"] {
+  accent-color: #171717;
+  width: 110px;
+  margin: 0;
+  cursor: pointer;
+}
+.ctl-disabled {
+  opacity: 0.45;
 }
 
 .builder-foot {
