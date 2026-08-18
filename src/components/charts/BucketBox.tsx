@@ -1,6 +1,6 @@
 "use client";
 
-import { Field, fmtValue, axisLabel, mean } from "@/lib/data";
+import { Field, fmtValue, axisLabel, mean, countNoun } from "@/lib/data";
 import {
   INK,
   GRID,
@@ -24,15 +24,17 @@ interface Props {
   yField: Field;
   xTitle: string;
   height?: number;
+  /** dashboard toggles */
+  grid?: boolean;
+  showSd1?: boolean;
+  showSd2?: boolean;
 }
 
 const PAD_L = 58;
 const PAD_R = 14;
 const PAD_T = 16;
-const PAD_B = 46;
-const BOX_W = 26; // ±1σ box
-const BAND_W = 12; // ±2σ band
-const CAP_W = 10; // whisker end caps
+const PAD_B = 56;
+const BOX_W = 26; // ±1σ box; ±2σ and min/max caps share this width
 
 function sd(xs: number[], m: number): number {
   return Math.sqrt(xs.reduce((a, x) => a + (x - m) ** 2, 0) / xs.length);
@@ -43,7 +45,15 @@ function sd(xs: number[], m: number): number {
  * Whiskers span min→max, the light band is mean±2σ, the dark box is mean±1σ,
  * the white line is the mean (σ ranges clamped to the observed min/max).
  */
-export default function BucketBox({ buckets, yField, xTitle, height = 380 }: Props) {
+export default function BucketBox({
+  buckets,
+  yField,
+  xTitle,
+  height = 380,
+  grid = true,
+  showSd1 = true,
+  showSd2 = true,
+}: Props) {
   const [ref, width] = useMeasure<HTMLDivElement>();
   const { tip, show, hide } = useTooltip();
 
@@ -83,8 +93,10 @@ export default function BucketBox({ buckets, yField, xTitle, height = 380 }: Pro
         <svg className="chart-svg" width={width} height={height} role="img">
           {ticks.map((t) => (
             <g key={t}>
-              <line x1={PAD_L} y1={sy(t)} x2={width - PAD_R} y2={sy(t)} stroke={GRID} strokeWidth={1} />
-              <text x={PAD_L - 7} y={sy(t) + 3.5} textAnchor="end" fontSize={11} fill={AXIS_TEXT}>
+              {grid && (
+                <line x1={PAD_L} y1={sy(t)} x2={width - PAD_R} y2={sy(t)} stroke={GRID} strokeWidth={1} />
+              )}
+              <text x={PAD_L - 7} y={sy(t) + 3.5} textAnchor="end" fontSize={11.5} fill={AXIS_TEXT}>
                 {fmtShort(t)}
               </text>
             </g>
@@ -101,7 +113,7 @@ export default function BucketBox({ buckets, yField, xTitle, height = 380 }: Pro
                 onPointerMove={(e) => {
                   const r = (e.currentTarget.ownerSVGElement as SVGSVGElement).getBoundingClientRect();
                   show(e.clientX - r.left, e.clientY - r.top, [
-                    { value: s.label, label: `· ${s.n} people` },
+                    { value: s.label, label: `· ${countNoun(s.n)}` },
                     { value: fmt(s.mean), label: "mean" },
                     { value: `±${fmt(s.sd)}`, label: "one σ" },
                     { value: `${fmt(s.min)} – ${fmt(s.max)}`, label: "min – max" },
@@ -111,51 +123,91 @@ export default function BucketBox({ buckets, yField, xTitle, height = 380 }: Pro
               >
                 {/* hit area */}
                 <rect x={PAD_L + i * slot} y={PAD_T} width={slot} height={plotH + PAD_B} fill="transparent" />
-                {/* whisker: min → max with caps */}
-                <line x1={cx} y1={sy(s.max)} x2={cx} y2={sy(s.min)} stroke={INK[1]} strokeWidth={1.5} />
-                <line x1={cx - CAP_W / 2} y1={sy(s.max)} x2={cx + CAP_W / 2} y2={sy(s.max)} stroke={INK[1]} strokeWidth={1.5} />
-                <line x1={cx - CAP_W / 2} y1={sy(s.min)} x2={cx + CAP_W / 2} y2={sy(s.min)} stroke={INK[1]} strokeWidth={1.5} />
-                {/* ±2σ band (lighter, narrower) */}
-                <rect
-                  x={cx - BAND_W / 2}
-                  y={sy(s.hi2)}
-                  width={BAND_W}
-                  height={Math.max(sy(s.lo2) - sy(s.hi2), 1)}
-                  fill={INK[3]}
-                />
-                {/* ±1σ box (dark) */}
-                <rect
-                  x={cx - BOX_W / 2}
-                  y={sy(s.hi1)}
-                  width={BOX_W}
-                  height={Math.max(sy(s.lo1) - sy(s.hi1), 2)}
-                  fill={INK[0]}
-                  rx={3}
-                />
+                {(() => {
+                  // stems anchor at the outermost visible element
+                  const top = showSd1 ? s.hi1 : s.mean;
+                  const bot = showSd1 ? s.lo1 : s.mean;
+                  const dotTop = showSd2 ? s.hi2 : top;
+                  const dotBot = showSd2 ? s.lo2 : bot;
+                  return (
+                    <>
+                      {/* min/max: dotted stems, box-width caps */}
+                      <line
+                        x1={cx}
+                        y1={sy(s.max)}
+                        x2={cx}
+                        y2={sy(dotTop)}
+                        stroke={INK[0]}
+                        strokeWidth={1.5}
+                        strokeDasharray="1.5 3.5"
+                        strokeLinecap="round"
+                      />
+                      <line
+                        x1={cx}
+                        y1={sy(dotBot)}
+                        x2={cx}
+                        y2={sy(s.min)}
+                        stroke={INK[0]}
+                        strokeWidth={1.5}
+                        strokeDasharray="1.5 3.5"
+                        strokeLinecap="round"
+                      />
+                      <line x1={cx - BOX_W / 2} y1={sy(s.max)} x2={cx + BOX_W / 2} y2={sy(s.max)} stroke={INK[0]} strokeWidth={1.25} />
+                      <line x1={cx - BOX_W / 2} y1={sy(s.min)} x2={cx + BOX_W / 2} y2={sy(s.min)} stroke={INK[0]} strokeWidth={1.25} />
+                      {/* ±2σ: solid stems, box-width caps */}
+                      {showSd2 && (
+                        <>
+                          <line x1={cx} y1={sy(s.hi2)} x2={cx} y2={sy(top)} stroke={INK[0]} strokeWidth={2} />
+                          <line x1={cx} y1={sy(bot)} x2={cx} y2={sy(s.lo2)} stroke={INK[0]} strokeWidth={2} />
+                          <line x1={cx - BOX_W / 2} y1={sy(s.hi2)} x2={cx + BOX_W / 2} y2={sy(s.hi2)} stroke={INK[0]} strokeWidth={2} />
+                          <line x1={cx - BOX_W / 2} y1={sy(s.lo2)} x2={cx + BOX_W / 2} y2={sy(s.lo2)} stroke={INK[0]} strokeWidth={2} />
+                        </>
+                      )}
+                      {/* ±1σ box (light gray, no outline) */}
+                      {showSd1 && (
+                        <rect
+                          x={cx - BOX_W / 2}
+                          y={sy(s.hi1)}
+                          width={BOX_W}
+                          height={Math.max(sy(s.lo1) - sy(s.hi1), 2)}
+                          fill="#dcdcdc"
+                          rx={2}
+                        />
+                      )}
+                    </>
+                  );
+                })()}
                 {/* mean line + label */}
                 <line
                   x1={cx - BOX_W / 2}
                   y1={sy(s.mean)}
                   x2={cx + BOX_W / 2}
                   y2={sy(s.mean)}
-                  stroke={SURFACE}
+                  stroke={INK[0]}
                   strokeWidth={2}
                 />
-                <text x={cx + BOX_W / 2 + 6} y={sy(s.mean) + 4} fontSize={11.5} fill="#171717" className="tnum">
+                <text
+                  x={cx + BOX_W / 2 + 7}
+                  y={sy(s.mean) + 4}
+                  fontSize={12}
+                  fontWeight={600}
+                  fill="#171717"
+                  className="tnum"
+                >
                   {fmtShort(s.mean)}
                 </text>
-                {/* min / max labels */}
-                <text x={cx + CAP_W / 2 + 5} y={sy(s.max) + 3.5} fontSize={10.5} fill={AXIS_TEXT}>
+                {/* min / max labels — same column and size as the mean */}
+                <text x={cx + BOX_W / 2 + 7} y={sy(s.max) + 4} fontSize={12} fill="#404040" className="tnum">
                   {fmtShort(s.max)}
                 </text>
-                <text x={cx + CAP_W / 2 + 5} y={sy(s.min) + 3.5} fontSize={10.5} fill={AXIS_TEXT}>
+                <text x={cx + BOX_W / 2 + 7} y={sy(s.min) + 4} fontSize={12} fill="#404040" className="tnum">
                   {fmtShort(s.min)}
                 </text>
                 {/* bucket label + n */}
-                <text x={cx} y={PAD_T + plotH + 15} textAnchor="middle" fontSize={11} fill={AXIS_TEXT}>
+                <text x={cx} y={PAD_T + plotH + 16} textAnchor="middle" fontSize={12} fill="#171717">
                   {s.label.length > 14 ? s.label.slice(0, 13) + "…" : s.label}
                 </text>
-                <text x={cx} y={PAD_T + plotH + 27} textAnchor="middle" fontSize={9.5} fill={AXIS_TEXT}>
+                <text x={cx} y={PAD_T + plotH + 29} textAnchor="middle" fontSize={10.5} fill={AXIS_TEXT}>
                   n={s.n}
                 </text>
               </g>
@@ -175,8 +227,46 @@ export default function BucketBox({ buckets, yField, xTitle, height = 380 }: Pro
           </text>
         </svg>
       )}
-      <div className="muted" style={{ fontSize: 12.5, marginTop: 4, fontStyle: "italic" }}>
-        dark box = mean ±1σ (white line = mean) · light band = ±2σ · whiskers = min/max
+      <div className="secondary" style={{ fontSize: 13, marginTop: 6 }}>
+        {showSd1 ? (
+          <>
+            <svg width={11} height={13} aria-hidden style={{ verticalAlign: "-2px", marginRight: 4 }}>
+              <rect x={2} y={1.5} width={7} height={10} fill="#dcdcdc" rx={1} />
+              <line x1={2} y1={6.5} x2={9} y2={6.5} stroke="#171717" strokeWidth={1.5} />
+            </svg>
+            box = mean ± 1σ, black line = mean&ensp;·&ensp;
+          </>
+        ) : (
+          <>
+            <svg width={11} height={13} aria-hidden style={{ verticalAlign: "-2px", marginRight: 4 }}>
+              <line x1={2} y1={6.5} x2={9} y2={6.5} stroke="#171717" strokeWidth={2} />
+            </svg>
+            black line = mean&ensp;·&ensp;
+          </>
+        )}
+        {showSd2 && (
+          <>
+            <svg width={11} height={13} aria-hidden style={{ verticalAlign: "-2px", marginRight: 4 }}>
+              <line x1={5.5} y1={1} x2={5.5} y2={12} stroke="#171717" strokeWidth={2} />
+              <line x1={1} y1={1} x2={10} y2={1} stroke="#171717" strokeWidth={2} />
+              <line x1={1} y1={12} x2={10} y2={12} stroke="#171717" strokeWidth={2} />
+            </svg>
+            solid line = ± 2σ&ensp;·&ensp;
+          </>
+        )}
+        <svg width={11} height={13} aria-hidden style={{ verticalAlign: "-2px", marginRight: 4 }}>
+          <line
+            x1={5.5}
+            y1={1.5}
+            x2={5.5}
+            y2={11.5}
+            stroke="#171717"
+            strokeWidth={1.5}
+            strokeDasharray="1.5 3"
+            strokeLinecap="round"
+          />
+        </svg>
+        dotted = min–max
       </div>
       <Tooltip tip={tip} width={width} />
     </div>

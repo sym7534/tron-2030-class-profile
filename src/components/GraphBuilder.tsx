@@ -15,6 +15,7 @@ import {
   mean,
   pearson,
   answeredCount,
+  countNoun,
 } from "@/lib/data";
 import { PRESETS } from "@/lib/sections";
 import BucketBox, { Bucket } from "./charts/BucketBox";
@@ -39,16 +40,17 @@ const isCat = (f: Field | null) =>
 const MAX_CAT_ROWS = 12;
 
 /** bucket numeric x values into clean ranges — every pair lands in a bucket */
-function numericBuckets(pairs: { x: number; y: number }[], xf: Field): Bucket[] {
+function numericBuckets(pairs: { x: number; y: number }[], xf: Field, dense = false): Bucket[] {
   const xs = pairs.map((p) => p.x);
   let edges: number[];
   if (xf.intScale && xf.intScale[1] - xf.intScale[0] <= 10) {
-    // small integer scales: pair up values (1-2, 3-4, ...) to keep groups fat
+    // small integer scales: pair up values (1-2, 3-4, ...); dense = one per value
     const [lo, hi] = xf.intScale;
+    const step = dense ? 1 : 2;
     edges = [];
-    for (let v = lo; v <= hi + 1; v += 2) edges.push(v - 0.5);
+    for (let v = lo; v <= hi + 1; v += step) edges.push(v - 0.5);
   } else {
-    const { lo, hi, ticks } = niceDomain(xs, { target: 5 });
+    const { lo, hi, ticks } = niceDomain(xs, { target: dense ? 10 : 5 });
     edges = ticks.length >= 3 ? ticks : [lo, (lo + hi) / 2, hi];
   }
   const buckets: Bucket[] = [];
@@ -60,7 +62,11 @@ function numericBuckets(pairs: { x: number; y: number }[], xf: Field): Bucket[] 
     if (inB.length === 0) continue; // nothing to plot in this range
     const f = (v: number) => fmtValue(xf, v).replace(/\s/g, "");
     buckets.push({
-      label: xf.intScale ? `${Math.ceil(x0)}–${Math.floor(x1)}` : `${f(x0)}–${f(x1)}`,
+      label: xf.intScale
+        ? Math.ceil(x0) === Math.floor(x1)
+          ? `${Math.ceil(x0)}`
+          : `${Math.ceil(x0)}–${Math.floor(x1)}`
+        : `${f(x0)}–${f(x1)}`,
       values: inB.map((p) => p.y),
     });
   }
@@ -91,6 +97,11 @@ export default function GraphBuilder() {
   const [filterId, setFilterId] = useState("");
   const [filterVal, setFilterVal] = useState("");
   const [preset, setPreset] = useState<string | null>("the great deflation");
+  // dashboard display toggles
+  const [grid, setGrid] = useState(true);
+  const [sd1, setSd1] = useState(true);
+  const [sd2, setSd2] = useState(true);
+  const [dense, setDense] = useState(false);
 
   const xf: Field | null = xId === COUNT ? null : (fieldById[xId] ?? null);
   const yf: Field | null = yId === COUNT ? null : (fieldById[yId] ?? null);
@@ -184,7 +195,7 @@ export default function GraphBuilder() {
       const values = rows
         .map((r) => numericOf(r, f))
         .filter((v): v is number => v !== null && Number.isFinite(v));
-      body = values.length ? <Histogram field={f} values={values} /> : null;
+      body = values.length ? <Histogram field={f} values={values} grid={grid} /> : null;
       caption = (
         <>
           how many people gave each answer &middot; n = <span className="tnum">{n}</span>
@@ -240,9 +251,17 @@ export default function GraphBuilder() {
         })
         .filter((p): p is { x: number; y: number } => p !== null);
       const r = pearson(pts.map((p) => [p.x, p.y] as [number, number]));
-      const buckets = numericBuckets(pts, xf);
+      const buckets = numericBuckets(pts, xf, dense);
       body = buckets.length ? (
-        <BucketBox buckets={buckets} yField={yf} xTitle={axisLabel(xf)} height={400} />
+        <BucketBox
+          buckets={buckets}
+          yField={yf}
+          xTitle={axisLabel(xf)}
+          height={400}
+          grid={grid}
+          showSd1={sd1}
+          showSd2={sd2}
+        />
       ) : (
         <p className="muted" style={{ padding: 40 }}>
           nobody answered both of these.
@@ -297,7 +316,15 @@ export default function GraphBuilder() {
       }
       const shown = buckets.reduce((a, b) => a + b.values.length, 0);
       body = buckets.length ? (
-        <BucketBox buckets={buckets} yField={numF} xTitle={axisLabel(catF)} height={400} />
+        <BucketBox
+          buckets={buckets}
+          yField={numF}
+          xTitle={axisLabel(catF)}
+          height={400}
+          grid={grid}
+          showSd1={sd1}
+          showSd2={sd2}
+        />
       ) : (
         <p className="muted" style={{ padding: 40 }}>
           nobody answered both of these.
@@ -397,6 +424,13 @@ export default function GraphBuilder() {
 
   const activePreset = PRESETS.find((p) => p.name === preset);
 
+  // which display toggles make sense for the current chart
+  const isBucketNum = !!(xf && yf) && isNum(xf) && isNum(yf);
+  const isBucketCat = !!(xf && yf) && isCat(xf) !== isCat(yf);
+  const hasBoxChart = isBucketNum || isBucketCat;
+  const hasGridChart =
+    hasBoxChart || (!!uniField && (uniField.kind === "numeric" || uniField.kind === "date"));
+
   return (
     <div className="builder">
       <div className="preset-row">
@@ -431,7 +465,7 @@ export default function GraphBuilder() {
         </span>
         <span className="axis-ctl">
           <label htmlFor="filter-field" className="axis-label">
-            only
+            filter by
           </label>
           <select
             id="filter-field"
@@ -469,12 +503,39 @@ export default function GraphBuilder() {
         </span>
       </div>
 
+      {hasGridChart && (
+        <div className="ctl-row" role="group" aria-label="display options">
+          <label className="ctl-check">
+            <input type="checkbox" checked={grid} onChange={(e) => setGrid(e.target.checked)} />
+            gridlines
+          </label>
+          {hasBoxChart && (
+            <>
+              <label className="ctl-check">
+                <input type="checkbox" checked={sd1} onChange={(e) => setSd1(e.target.checked)} />
+                ± 1σ box
+              </label>
+              <label className="ctl-check">
+                <input type="checkbox" checked={sd2} onChange={(e) => setSd2(e.target.checked)} />
+                ± 2σ line
+              </label>
+            </>
+          )}
+          {isBucketNum && (
+            <label className="ctl-check">
+              <input type="checkbox" checked={dense} onChange={(e) => setDense(e.target.checked)} />
+              more buckets
+            </label>
+          )}
+        </div>
+      )}
+
       <h3 className="builder-title">
         {title}
         {filterVal && (
           <span className="muted">
             {" "}
-            &middot; {shortCat(filterField!, filterVal)} only ({rows.length} people)
+            &middot; {shortCat(filterField!, filterVal)} only ({countNoun(rows.length)})
           </span>
         )}
       </h3>
@@ -497,13 +558,6 @@ export default function GraphBuilder() {
         )}
       </div>
 
-      <p className="builder-hint muted">
-        Numbers &times; numbers groups the x-axis into buckets and shows each
-        bucket&rsquo;s mean, &plusmn;1&sigma;, &plusmn;2&sigma; and min/max rather than
-        individual dots. Categories &times; numbers does the same per group, categories
-        &times; categories draws a heatmap. Every answer is counted. Set an axis to{" "}
-        <em>just count people</em> for the plain distribution.
-      </p>
     </div>
   );
 }

@@ -296,3 +296,8 @@ export function axisLabel(f: Field): string {
     .join(" ");
   return f.unit ? `${label} (${f.unit})` : label;
 }
+
+/** "1 person" / "5 people" and friends */
+export function countNoun(n: number, singular = "person", plural = "people"): string {
+  return `${n} ${n === 1 ? singular : plural}`;
+}
