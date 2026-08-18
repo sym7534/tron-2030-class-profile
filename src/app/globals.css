@@ -472,6 +472,23 @@ select:focus {
   text-underline-offset: 3px;
 }
 
+/* Lenis momentum scroll (mounted from LenisScroll.tsx on the landing page).
+   While Lenis drives the scroll, native CSS smooth scrolling must yield or
+   anchor jumps would double-animate. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
 @keyframes fade-up {
   from {
     opacity: 0;

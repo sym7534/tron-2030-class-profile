@@ -2,6 +2,7 @@ import { survey, N, numericValues, median, distribution } from "@/lib/data";
 import { SECTIONS, sectionFieldIds, questionNumbers } from "@/lib/sections";
 import GraphBuilder from "@/components/GraphBuilder";
 import QuestionCard from "@/components/QuestionCard";
+import LenisScroll from "@/components/LenisScroll";
 import Waffle from "@/components/charts/Waffle";
 
 function heroStats() {
@@ -31,6 +32,7 @@ export default function Home() {
 
   return (
     <>
+      <LenisScroll />
       <nav className="topnav">
         <a href="#top" className="topnav-brand">
           tron 2030
