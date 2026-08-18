@@ -433,20 +433,6 @@ export default function GraphBuilder() {
 
   return (
     <div className="builder">
-      <div className="preset-row">
-        <span className="muted preset-lead">try one:</span>
-        {PRESETS.map((p) => (
-          <button
-            key={p.name}
-            onClick={() => applyPreset(p)}
-            title={p.quip}
-            className={preset === p.name ? "toggle-active" : undefined}
-          >
-            {p.name}
-          </button>
-        ))}
-      </div>
-
       <h3 className="builder-title">
         {title}
         {filterVal && (
@@ -462,7 +448,7 @@ export default function GraphBuilder() {
         {body}
       </ChartFrame>
 
-      <div className="axis-row" style={{ marginTop: 14, marginBottom: 0 }}>
+      <div className="axis-row" style={{ marginTop: 30, marginBottom: 0 }}>
         <span className="axis-ctl">
           <label htmlFor="x-axis" className="axis-label">
             x
@@ -562,6 +548,20 @@ export default function GraphBuilder() {
           )}
         </div>
       )}
+
+      <div className="preset-row" style={{ marginTop: 18, marginBottom: 0 }}>
+        <span className="muted preset-lead">try one:</span>
+        {PRESETS.map((p) => (
+          <button
+            key={p.name}
+            onClick={() => applyPreset(p)}
+            title={p.quip}
+            className={preset === p.name ? "toggle-active" : undefined}
+          >
+            {p.name}
+          </button>
+        ))}
+      </div>
 
       <div className="builder-foot">
         {filterVal && (
