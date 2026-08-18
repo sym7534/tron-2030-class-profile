@@ -27,13 +27,15 @@ interface Props {
   /** axis titles */
   xTitle?: string;
   yTitle?: string;
+  /** show horizontal gridlines (the zero axis-line always draws) */
+  grid?: boolean;
 }
 
 const PAD_L = 46;
 const PAD_R = 8;
 const MAX_COL_W = 24; // dataviz spec: bars never thicker than 24px
 
-export default function Columns({ data, height = 200, capLabels, xTitle, yTitle }: Props) {
+export default function Columns({ data, height = 200, capLabels, xTitle, yTitle, grid = true }: Props) {
   const [ref, width] = useMeasure<HTMLDivElement>();
   const { tip, show, hide } = useTooltip();
 
@@ -58,14 +60,16 @@ export default function Columns({ data, height = 200, capLabels, xTitle, yTitle 
           {/* horizontal gridlines at every labeled tick, axis-line at zero */}
           {ticks.map((t) => (
             <g key={t}>
-              <line
-                x1={PAD_L}
-                y1={sy(t)}
-                x2={width - PAD_R}
-                y2={sy(t)}
-                stroke={t === 0 ? AXIS : GRID}
-                strokeWidth={1}
-              />
+              {(grid || t === 0) && (
+                <line
+                  x1={PAD_L}
+                  y1={sy(t)}
+                  x2={width - PAD_R}
+                  y2={sy(t)}
+                  stroke={t === 0 ? AXIS : GRID}
+                  strokeWidth={1}
+                />
+              )}
               <text x={PAD_L - 7} y={sy(t) + 3.5} textAnchor="end" fontSize={11} fill={AXIS_TEXT}>
                 {t}
               </text>

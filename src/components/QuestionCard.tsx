@@ -23,7 +23,8 @@ import Histogram from "./charts/Histogram";
 import Pie from "./charts/Pie";
 import MbtiGrid from "./charts/MbtiGrid";
 import Columns from "./charts/Columns";
-import WordWall from "./WordWall";
+import WordWall, { groupVerbatim } from "./WordWall";
+import WordCloud from "./charts/WordCloud";
 
 /** small mutually-exclusive categoricals read cleanly as pies (à la Tron 2020) */
 const PIE_IDS = new Set([
@@ -45,6 +46,18 @@ const PIE_IDS = new Set([
 ]);
 
 const QUOTE_IDS = new Set(["advice", "message", "finalThoughts"]);
+
+/** short answers with many unique responses render as a d3-cloud phrase cloud */
+const CLOUD_IDS = new Set([
+  "game",
+  "artist",
+  "song",
+  "dreamCompany",
+  "liveCarefree",
+  "foodSpot",
+  "campusSpot",
+  "oneWord",
+]);
 
 /** short one-liners read better as a flowing wall than as 48 stacked quote blocks */
 function wallMode(id: string, values: string[]): "wall" | "quotes" | "big" {
@@ -88,6 +101,9 @@ export default function QuestionCard({ id, qNum }: { id: string; qNum?: number }
   const body = useMemo(() => {
     if (f.kind === "text") {
       const values = textValues(f);
+      if (CLOUD_IDS.has(id)) {
+        return <WordCloud entries={groupVerbatim(values)} height={id === "oneWord" ? 260 : 320} />;
+      }
       return <WordWall values={values} mode={wallMode(id, values)} />;
     }
     if (id === "mbti") {
@@ -236,11 +252,6 @@ export default function QuestionCard({ id, qNum }: { id: string; qNum?: number }
       {showTable ? table : body}
       <footer style={{ marginTop: 10, fontSize: 12.5 }} className="muted">
         {f.kind === "multi" && <div style={{ fontStyle: "italic" }}>multiple answers allowed</div>}
-        {id === "heightCm" && (
-          <div style={{ fontStyle: "italic" }}>
-            heights normalized to cm from whatever unit (or yelling) you answered in
-          </div>
-        )}
         {notes.map((n) => (
           <div key={n} style={{ fontStyle: "italic" }}>
             {n}

@@ -5,16 +5,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 /** ink ramp — the only "palette": grayscale steps with wide lightness separation */
 export const INK = ["#171717", "#8a8a8a", "#c9c9c9", "#ececec"];
 export const GRID = "#ececec";
-export const AXIS = "#b3b3b3"; // axis lines: a step darker than gridlines
-export const AXIS_TEXT = "#737373";
+export const AXIS = "#737373"; // axis lines: clearly darker than gridlines
+export const AXIS_TEXT = "#4a4a4a";
 export const SURFACE = "#ffffff";
 
-/** shared axis-title text style (serif italic, muted) */
+/** shared axis-title text style — plain sans, no italics */
 export const AXIS_TITLE_PROPS = {
-  fontSize: 11.5,
-  fontStyle: "italic" as const,
-  fontFamily: "var(--serif)",
-  fill: AXIS_TEXT,
+  fontSize: 12,
+  fill: "#404040",
 };
 
 /** responsive width via ResizeObserver */

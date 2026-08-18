@@ -59,7 +59,7 @@ export default function Home() {
             <span className="tnum">{N}</span> of us answered{" "}
             <span className="tnum">{totalQuestions}</span> questions about where we came from,
             what first year did to us, and what we actually think. Every dot below is one
-            person. Nothing is anonymized away except the names.
+            person.
           </p>
 
           <div className="hero-waffle">
@@ -84,9 +84,6 @@ export default function Home() {
 
         <section id="builder" className="builder-section">
           <h2 className="section-header">the instrument</h2>
-          <p className="section-blurb">
-            Put any question against any other. This is the whole survey, in one control panel.
-          </p>
           <GraphBuilder />
         </section>
 
@@ -96,7 +93,6 @@ export default function Home() {
             <section key={s.id} id={s.id} className="chapter">
               <div className="chapter-head">
                 <h2 className="section-header">{s.title}</h2>
-                <p className="section-blurb">{s.blurb}</p>
                 <p className="muted chapter-count tnum">
                   {ids.length} question{ids.length === 1 ? "" : "s"}
                 </p>

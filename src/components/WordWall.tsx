@@ -9,7 +9,7 @@ interface Props {
 }
 
 /** group case-insensitive exact duplicates, keep the most common casing */
-function groupVerbatim(values: string[]): { text: string; count: number }[] {
+export function groupVerbatim(values: string[]): { text: string; count: number }[] {
   const groups = new Map<string, Map<string, number>>();
   for (const v of values) {
     const key = v.toLowerCase().trim();

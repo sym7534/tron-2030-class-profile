@@ -7,6 +7,7 @@ interface Props {
   field: Field;
   values: number[];
   height?: number;
+  grid?: boolean;
 }
 
 function stddev(xs: number[]): number {
@@ -14,7 +15,7 @@ function stddev(xs: number[]): number {
   return Math.sqrt(xs.reduce((a, x) => a + (x - m) ** 2, 0) / xs.length);
 }
 
-export default function Histogram({ field, values, height }: Props) {
+export default function Histogram({ field, values, height, grid = true }: Props) {
   if (values.length === 0) return null;
   const bins = binsFor(field, values);
   const data = bins.map((b) => ({
@@ -33,6 +34,7 @@ export default function Histogram({ field, values, height }: Props) {
         data={data}
         height={height}
         capLabels={bins.length <= 13}
+        grid={grid}
         xTitle={xTitle}
         yTitle="people"
       />

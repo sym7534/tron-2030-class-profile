@@ -361,10 +361,8 @@ function parseDesignTeams(id, v) {
   }
   const out = new Set();
   if (/waton|wato\b|watonomous/.test(low)) out.add(merge(id, "WATonomous", s));
-  if (/warg/.test(low)) {
-    if (/warg failure/.test(low)) note(id, "one respondent reports a “warg failure” — counted for Biotron only");
-    else out.add(merge(id, "WARG", s));
-  }
+  // "warg failure" = didn't get in — not counted as WARG
+  if (/warg/.test(low) && !/warg failure/.test(low)) out.add(merge(id, "WARG", s));
   if (/rocketry/.test(low)) out.add(merge(id, "Waterloo Rocketry", s));
   // "FSAE" also maps to UWFE: the old combustion FSAE team merged into it,
   // and UWFE itself competes under the FSAE banner (uwfsae.ca)
@@ -567,7 +565,8 @@ const FIELDS = [
   { id: "oneWord", col: 82, kind: "text", section: "words", label: "One word that best describes our program?", short: "One word" },
   { id: "advice", col: 80, kind: "text", section: "words", label: "What advice would you give to past you / new students?", short: "Advice" },
   { id: "message", col: 81, kind: "text", section: "words", label: "Leave a message for our class in the future:", short: "Message to the future" },
-  { id: "finalThoughts", col: 83, kind: "text", section: "words", label: "Leave any final thoughts or feedback you have here.", short: "Final thoughts" },
+  // survey-feedback meta question — parsed but not displayed
+  { id: "finalThoughts", col: 83, kind: "text", section: "words", label: "Leave any final thoughts or feedback you have here.", short: "Final thoughts", hideCard: true },
 ];
 
 // ---------------------------------------------------------------- build rows
@@ -609,12 +608,6 @@ note("cumAvg", "mean of 1A and 1B term averages; falls back to whichever exists 
 note("residence", "UWP includes Beck Hall, Eby Hall, North Court and Woolwich answers");
 note("residence", "dual answers like “V1/CMH” count under the first-named");
 note("bestRes", "UWP includes Beck Hall and Woolwich answers");
-note("bestRes", "anti-endorsements (“Def not United”) kept exactly as cast");
-note("ethnicity", "one respondent selected every single option; their clicks are included");
-note("religion", "one respondent selected every single option; their clicks are included");
-note("programs", "one respondent ticked all eleven programs; the long tail is mostly them");
-note("metFriends", "“all of the above” kept as its own bucket rather than guessed apart");
-note("sexuality", "one write-in kept verbatim, as is tradition");
 note("favTeacher", "answers naming two teachers count once for each");
 note("rate1B", "includes stream-4 ratings of a 1B term still in progress");
 

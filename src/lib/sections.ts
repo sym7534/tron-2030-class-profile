@@ -3,17 +3,16 @@ import { survey } from "./data";
 export interface SectionMeta {
   id: string;
   title: string;
-  blurb: string;
 }
 
 export const SECTIONS: SectionMeta[] = [
-  { id: "identity", title: "who we are", blurb: "68 people, four birth years, one program." },
-  { id: "admissions", title: "getting in", blurb: "the averages we came with, and when the offers landed." },
-  { id: "firstyear", title: "first year", blurb: "1A, 1B, and what they did to us." },
-  { id: "coop", title: "co-op", blurb: "the first work term: who got what, where, and for how much." },
-  { id: "sleep", title: "sleep & survival", blurb: "caffeine in, sleep out." },
-  { id: "takes", title: "taste & takes", blurb: "the questions with no wrong answers. mostly." },
-  { id: "words", title: "in our own words", blurb: "everything you typed, exactly as you typed it." },
+  { id: "identity", title: "who we are" },
+  { id: "admissions", title: "getting in" },
+  { id: "firstyear", title: "first year" },
+  { id: "coop", title: "co-op" },
+  { id: "sleep", title: "sleep & survival" },
+  { id: "takes", title: "taste & takes" },
+  { id: "words", title: "in our own words" },
 ];
 
 /** field ids per section, in survey order, excluding derived-only fields */
