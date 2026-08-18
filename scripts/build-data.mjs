@@ -563,8 +563,8 @@ const FIELDS = [
   { id: "campusSpot", col: 66, kind: "text", section: "words", label: "Favourite spot on campus?", short: "Campus spot" },
   { id: "deleteThing", col: 72, kind: "text", section: "words", label: "If you could pick one thing at Waterloo to permanently delete, what would it be?", short: "Would delete" },
   { id: "oneWord", col: 82, kind: "text", section: "words", label: "One word that best describes our program?", short: "One word" },
-  { id: "advice", col: 80, kind: "text", section: "words", label: "What advice would you give to past you / new students?", short: "Advice" },
-  { id: "message", col: 81, kind: "text", section: "words", label: "Leave a message for our class in the future:", short: "Message to the future" },
+  { id: "advice", col: 80, kind: "text", section: "words", label: "What advice would you give to past you / new students?", short: "Advice", hideCard: true },
+  { id: "message", col: 81, kind: "text", section: "words", label: "Leave a message for our class in the future:", short: "Message to the future", hideCard: true },
   // survey-feedback meta question — parsed but not displayed
   { id: "finalThoughts", col: 83, kind: "text", section: "words", label: "Leave any final thoughts or feedback you have here.", short: "Final thoughts", hideCard: true },
 ];

@@ -50,6 +50,7 @@ const CLOUD_IDS = new Set([
   "liveCarefree",
   "foodSpot",
   "campusSpot",
+  "deleteThing",
   "oneWord",
 ]);
 
