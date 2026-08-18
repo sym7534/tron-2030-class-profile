@@ -291,6 +291,11 @@ select:focus {
   margin: 0 auto;
   padding: clamp(3rem, 8vh, 5rem) 24px 0;
 }
+/* the dashboard breathes more: extra room after the hero and before the chapters */
+.builder-section {
+  padding-top: clamp(5rem, 13vh, 8.5rem);
+  padding-bottom: clamp(2.5rem, 7vh, 4.5rem);
+}
 .section-blurb {
   color: var(--text-muted);
   font-style: italic;
