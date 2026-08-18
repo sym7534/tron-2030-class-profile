@@ -1,7 +1,8 @@
-/* Privacy + math recheck for bucketed builder:
-   1. sweep axis pairs: no per-person dots in num×num / cat×num modes
+/* Coverage + math recheck for bucketed builder:
+   1. sweep axis pairs: no per-person scatter dots in num×num / cat×num modes
    2. independently recompute bucket stats from survey.json, diff vs DOM labels
-   3. table twin must never contain per-person rows */
+   3. table twin is aggregate-only
+   4. FULL COVERAGE: sum of bucket n across the chart equals every answered pair */
 const { chromium } = require("playwright");
 const fs = require("fs");
 const http = require("http");
@@ -71,7 +72,7 @@ const survey = JSON.parse(fs.readFileSync("src/data/survey.json", "utf8"));
     );
     return texts;
   });
-  // recompute: buckets on clean cumAvg edges with n>=3
+  // recompute: buckets on clean cumAvg edges — every pair must appear
   const pts = survey.rows
     .map((r) => ({ x: r.cumAvg, y: r.wage }))
     .filter((p) => typeof p.x === "number" && typeof p.y === "number");
@@ -81,7 +82,7 @@ const survey = JSON.parse(fs.readFileSync("src/data/survey.json", "utf8"));
   for (let i = 0; i < edges.length - 1; i++) {
     const last = i === edges.length - 2;
     const inB = pts.filter((q) => q.x >= edges[i] && (last ? q.x <= edges[i + 1] : q.x < edges[i + 1]));
-    if (inB.length >= 3) {
+    if (inB.length >= 1) {
       const ys = inB.map((q) => q.y);
       const m = ys.reduce((a, v) => a + v, 0) / ys.length;
       expected.push({
@@ -106,6 +107,17 @@ const survey = JSON.parse(fs.readFileSync("src/data/survey.json", "utf8"));
   console.log(`bucket math: ${expected.length} buckets checked, ${mathBad} mismatches`);
   if (mathBad) failures++;
 
+  // ---------- 2b. full coverage: n= labels in the chart sum to total pairs
+  const nLabels = domStats
+    .filter((t) => /^n=\d+$/.test(t))
+    .map((t) => parseInt(t.slice(2), 10));
+  const nSum = nLabels.reduce((a, b) => a + b, 0);
+  console.log(`coverage: chart shows ${JSON.stringify(nLabels)} = ${nSum}, expected ${pts.length}`);
+  if (nSum !== pts.length) {
+    console.log("  COVERAGE FAIL: bucket n's don't sum to all answered pairs");
+    failures++;
+  }
+
   // ---------- 3. table twin must be aggregate-only
   await p.evaluate(() => {
     [...document.querySelectorAll(".builder .chart-views button")]
@@ -128,6 +140,6 @@ const survey = JSON.parse(fs.readFileSync("src/data/survey.json", "utf8"));
 
   await b.close();
   server.close();
-  console.log(failures === 0 ? "PRIVACY RECHECK PASS" : `PRIVACY RECHECK: ${failures} failures`);
+  console.log(failures === 0 ? "COVERAGE RECHECK PASS" : `COVERAGE RECHECK: ${failures} failures`);
   process.exit(failures ? 1 : 0);
 })();

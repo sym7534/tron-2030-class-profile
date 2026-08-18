@@ -37,14 +37,9 @@ const isCat = (f: Field | null) =>
   !!f && (f.kind === "categorical" || f.kind === "ordinal" || f.kind === "multi");
 
 const MAX_CAT_ROWS = 12;
-/** privacy floor: aggregate buckets with fewer people than this are suppressed */
-const MIN_BUCKET_N = 3;
 
-/** bucket numeric x values into clean ranges for the aggregate plot */
-function numericBuckets(
-  pairs: { x: number; y: number }[],
-  xf: Field
-): { buckets: Bucket[]; suppressed: number } {
+/** bucket numeric x values into clean ranges — every pair lands in a bucket */
+function numericBuckets(pairs: { x: number; y: number }[], xf: Field): Bucket[] {
   const xs = pairs.map((p) => p.x);
   let edges: number[];
   if (xf.intScale && xf.intScale[1] - xf.intScale[0] <= 10) {
@@ -57,24 +52,19 @@ function numericBuckets(
     edges = ticks.length >= 3 ? ticks : [lo, (lo + hi) / 2, hi];
   }
   const buckets: Bucket[] = [];
-  let suppressed = 0;
   for (let i = 0; i < edges.length - 1; i++) {
     const x0 = edges[i];
     const x1 = edges[i + 1];
     const last = i === edges.length - 2;
     const inB = pairs.filter((p) => p.x >= x0 && (last ? p.x <= x1 : p.x < x1));
-    if (inB.length === 0) continue;
-    if (inB.length < MIN_BUCKET_N) {
-      suppressed += inB.length;
-      continue;
-    }
+    if (inB.length === 0) continue; // nothing to plot in this range
     const f = (v: number) => fmtValue(xf, v).replace(/\s/g, "");
     buckets.push({
       label: xf.intScale ? `${Math.ceil(x0)}–${Math.floor(x1)}` : `${f(x0)}–${f(x1)}`,
       values: inB.map((p) => p.y),
     });
   }
-  return { buckets, suppressed };
+  return buckets;
 }
 
 function bucketTable(buckets: Bucket[], yf: Field) {
@@ -241,8 +231,7 @@ export default function GraphBuilder() {
     title = `${yf.short} vs. ${xf.short}`;
 
     if (isNum(xf) && isNum(yf)) {
-      // ---- numeric × numeric: bucket x, show aggregate box per bucket.
-      // No individual dots — buckets under n=3 are suppressed entirely.
+      // ---- numeric × numeric: bucket x, one aggregate box per bucket, all data in
       const pts = rows
         .map((r) => {
           const x = numericOf(r, xf);
@@ -251,24 +240,18 @@ export default function GraphBuilder() {
         })
         .filter((p): p is { x: number; y: number } => p !== null);
       const r = pearson(pts.map((p) => [p.x, p.y] as [number, number]));
-      const { buckets, suppressed } = numericBuckets(pts, xf);
+      const buckets = numericBuckets(pts, xf);
       body = buckets.length ? (
         <BucketBox buckets={buckets} yField={yf} xTitle={axisLabel(xf)} height={400} />
       ) : (
         <p className="muted" style={{ padding: 40 }}>
-          {pts.length ? "every bucket here has fewer than 3 people — nothing to show safely." : "nobody answered both of these."}
+          nobody answered both of these.
         </p>
       );
       caption = (
         <>
-          grouped so no dot is one person &middot; n ={" "}
-          <span className="tnum">{pts.length - suppressed}</span>
-          {suppressed > 0 && (
-            <>
-              {" "}
-              &middot; {suppressed} in buckets of &lt;{MIN_BUCKET_N} hidden
-            </>
-          )}
+          answers grouped into buckets &middot; n = <span className="tnum">{pts.length}</span>{" "}
+          (everyone who answered both)
           {r !== null && (
             <>
               {" "}
@@ -289,8 +272,7 @@ export default function GraphBuilder() {
       // ---- category × numeric: same aggregate boxes, one per category
       const catF = isCat(xf) ? xf : yf;
       const numF = isCat(xf) ? yf : xf;
-      let suppressed = 0;
-      const buckets: Bucket[] = distribution(catF, rows)
+      const allGroups: Bucket[] = distribution(catF, rows)
         .map((d) => ({
           label: shortCat(catF, d.label),
           values: rows
@@ -298,32 +280,34 @@ export default function GraphBuilder() {
             .map((r) => numericOf(r, numF))
             .filter((v): v is number => v !== null),
         }))
-        .filter((b) => {
-          if (b.values.length === 0) return false;
-          if (b.values.length < MIN_BUCKET_N) {
-            suppressed += b.values.length;
-            return false;
-          }
-          return true;
-        })
-        .sort((a, b) => mean(b.values) - mean(a.values))
-        .slice(0, MAX_CAT_ROWS);
+        .filter((b) => b.values.length > 0)
+        .sort((a, b) => mean(b.values) - mean(a.values));
+      // keep the chart readable: many tiny categories fold into one combined group
+      let buckets = allGroups;
+      if (allGroups.length > MAX_CAT_ROWS) {
+        const kept = allGroups.slice(0, MAX_CAT_ROWS - 1);
+        const rest = allGroups.slice(MAX_CAT_ROWS - 1);
+        buckets = [
+          ...kept,
+          {
+            label: `everything else (${rest.length})`,
+            values: rest.flatMap((b) => b.values),
+          },
+        ];
+      }
       const shown = buckets.reduce((a, b) => a + b.values.length, 0);
       body = buckets.length ? (
         <BucketBox buckets={buckets} yField={numF} xTitle={axisLabel(catF)} height={400} />
       ) : (
         <p className="muted" style={{ padding: 40 }}>
-          every group here has fewer than {MIN_BUCKET_N} people — nothing to show safely.
+          nobody answered both of these.
         </p>
       );
       caption = (
         <>
           groups sorted by mean &middot; n = <span className="tnum">{shown}</span>
-          {suppressed > 0 && (
-            <>
-              {" "}
-              &middot; {suppressed} in groups of &lt;{MIN_BUCKET_N} hidden
-            </>
+          {allGroups.length > MAX_CAT_ROWS && (
+            <> &middot; small categories pooled into &ldquo;everything else&rdquo;</>
           )}
           {catF.kind === "multi" && <> &middot; pick-many, so people appear in several groups</>}
           {isNum(xf) && <> &middot; axes swapped so the categories can be read</>}
@@ -507,12 +491,11 @@ export default function GraphBuilder() {
       </div>
 
       <p className="builder-hint muted">
-        Any question against any other. Numbers &times; numbers groups the x-axis into
-        buckets and shows each bucket&rsquo;s mean, &plusmn;1&sigma;, &plusmn;2&sigma; and
-        min/max &mdash; never individual people. Categories &times; numbers does the same per
-        group, categories &times; categories draws a heatmap. Groups smaller than three
-        people are hidden. Set an axis to <em>just count people</em> for the plain
-        distribution.
+        Numbers &times; numbers groups the x-axis into buckets and shows each
+        bucket&rsquo;s mean, &plusmn;1&sigma;, &plusmn;2&sigma; and min/max rather than
+        individual dots. Categories &times; numbers does the same per group, categories
+        &times; categories draws a heatmap. Every answer is counted. Set an axis to{" "}
+        <em>just count people</em> for the plain distribution.
       </p>
     </div>
   );
