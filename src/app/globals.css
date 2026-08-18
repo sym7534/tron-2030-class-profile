@@ -464,6 +464,42 @@ select:focus {
   border-radius: 50%;
 }
 
+/* pie chart: slice + legend layout */
+.pie-layout {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+.pie-svg {
+  flex-shrink: 0;
+  width: auto;
+}
+.pie-legend {
+  display: grid;
+  gap: 6px;
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  min-width: 150px;
+}
+.pie-key {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.pie-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+  flex-shrink: 0;
+  align-self: center;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+.pie-key-label {
+  color: var(--text-primary);
+}
+
 /* text-button toggles: active = primary + underline */
 .toggle-active {
   color: var(--text-primary);

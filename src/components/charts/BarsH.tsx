@@ -1,6 +1,17 @@
 "use client";
 
-import { INK, GRID, AXIS_TEXT, barPathH, useMeasure, useTooltip, Tooltip } from "./common";
+import {
+  INK,
+  GRID,
+  AXIS,
+  AXIS_TEXT,
+  AXIS_TITLE_PROPS,
+  barPathH,
+  useMeasure,
+  useTooltip,
+  Tooltip,
+  countDomain,
+} from "./common";
 
 export interface BarDatum {
   label: string;
@@ -20,6 +31,8 @@ interface Props {
 const ROW_H = 26;
 const BAR_H = 16;
 const LABEL_W = 190;
+const PAD_R = 34;
+const AXIS_H = 30; // bottom: tick labels + axis title
 
 export default function BarsH({ data, total, totalLabel = "of answers", maxRows = 40 }: Props) {
   const [ref, width] = useMeasure<HTMLDivElement>();
@@ -29,16 +42,41 @@ export default function BarsH({ data, total, totalLabel = "of answers", maxRows 
   const hidden = data.length - shown.length;
   const denom = total ?? data.reduce((a, d) => a + d.count, 0);
   const max = Math.max(...shown.map((d) => d.count), 1);
-  const chartW = Math.max(width - LABEL_W - 40, 60);
-  const height = shown.length * ROW_H;
+  const { hi, ticks } = countDomain(max, 4);
+  const chartW = Math.max(width - LABEL_W - PAD_R, 60);
+  const rowsH = shown.length * ROW_H;
+  const height = rowsH + AXIS_H;
+  const sx = (t: number) => LABEL_W + (t / hi) * chartW;
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
       {width > 0 && (
         <svg className="chart-svg" width={width} height={height} role="img">
+          {/* vertical gridlines at labeled count increments */}
+          {ticks.map((t) => (
+            <g key={t}>
+              <line
+                x1={sx(t)}
+                y1={0}
+                x2={sx(t)}
+                y2={rowsH}
+                stroke={t === 0 ? AXIS : GRID}
+                strokeWidth={1}
+              />
+              <text
+                x={sx(t)}
+                y={rowsH + 13}
+                textAnchor="middle"
+                fontSize={11}
+                fill={AXIS_TEXT}
+              >
+                {t}
+              </text>
+            </g>
+          ))}
           {shown.map((d, i) => {
             const y = i * ROW_H;
-            const w = Math.max((d.count / max) * chartW, 2);
+            const w = Math.max((d.count / hi) * chartW, d.count > 0 ? 2 : 0);
             return (
               <g
                 key={d.label}
@@ -63,7 +101,7 @@ export default function BarsH({ data, total, totalLabel = "of answers", maxRows 
                 >
                   {d.label.length > 28 ? d.label.slice(0, 27) + "…" : d.label}
                 </text>
-                <path d={barPathH(LABEL_W, y + (ROW_H - BAR_H) / 2, w, BAR_H)} fill={INK[0]} />
+                {d.count > 0 && <path d={barPathH(LABEL_W, y + (ROW_H - BAR_H) / 2, w, BAR_H)} fill={INK[0]} />}
                 <text
                   x={LABEL_W + w + 7}
                   y={y + ROW_H / 2 + 4}
@@ -75,7 +113,9 @@ export default function BarsH({ data, total, totalLabel = "of answers", maxRows 
               </g>
             );
           })}
-          <line x1={LABEL_W} y1={0} x2={LABEL_W} y2={height} stroke={GRID} strokeWidth={1} />
+          <text x={LABEL_W + chartW / 2} y={height - 3} textAnchor="middle" {...AXIS_TITLE_PROPS}>
+            number of people
+          </text>
         </svg>
       )}
       {hidden > 0 && (

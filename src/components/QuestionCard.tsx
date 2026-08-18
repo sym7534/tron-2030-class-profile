@@ -20,12 +20,13 @@ import {
 } from "@/lib/data";
 import BarsH from "./charts/BarsH";
 import Histogram from "./charts/Histogram";
-import Waffle from "./charts/Waffle";
+import Pie from "./charts/Pie";
 import MbtiGrid from "./charts/MbtiGrid";
 import Columns from "./charts/Columns";
 import WordWall from "./WordWall";
 
-const WAFFLE_IDS = new Set([
+/** small mutually-exclusive categoricals read cleanly as pies (à la Tron 2020) */
+const PIE_IDS = new Set([
   "gender",
   "stream",
   "button",
@@ -37,6 +38,10 @@ const WAFFLE_IDS = new Set([
   "handedness",
   "hasCoop",
   "birthYear",
+  "parentsUni",
+  "relationship",
+  "sexuality",
+  "commute",
 ]);
 
 const QUOTE_IDS = new Set(["advice", "message", "finalThoughts"]);
@@ -107,8 +112,8 @@ export default function QuestionCard({ id, qNum }: { id: string; qNum?: number }
           ? `as written: ${rep.merged[d.label].slice(0, 4).join(" · ")}`
           : undefined,
     }));
-    if (f.kind === "categorical" && WAFFLE_IDS.has(id) && dist.length <= 5) {
-      return <Waffle groups={dist} total={N} />;
+    if (f.kind === "categorical" && PIE_IDS.has(id) && dist.length <= 6) {
+      return <Pie data={dist} total={answered} />;
     }
     return <BarsH data={dist} total={f.kind === "multi" ? answered : undefined} totalLabel={f.kind === "multi" ? "of respondents" : "of answers"} />;
   }, [f, id, rep, answered]);

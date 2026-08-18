@@ -177,7 +177,7 @@ export interface Bin {
 const fmtNum = (v: number) =>
   Math.abs(v) >= 1000 ? `${Math.round(v / 100) / 10}k` : `${Math.round(v * 10) / 10}`;
 
-/** "nice" linear bins */
+/** "nice" linear bins — conventional 1/2/5/10 widths so edges land on clean numbers */
 export function linearBins(values: number[], targetBins = 12): Bin[] {
   const lo = Math.min(...values);
   const hi = Math.max(...values);
@@ -186,7 +186,7 @@ export function linearBins(values: number[], targetBins = 12): Bin[] {
   }
   const rawStep = (hi - lo) / targetBins;
   const mag = 10 ** Math.floor(Math.log10(rawStep));
-  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= rawStep) ?? 10 * mag;
+  const step = [1, 2, 5, 10].map((m) => m * mag).find((s) => s >= rawStep) ?? 10 * mag;
   const start = Math.floor(lo / step) * step;
   const end = Math.ceil(hi / step) * step;
   const bins: Bin[] = [];
@@ -283,4 +283,16 @@ export function cmToFtIn(cm: number): string {
   const ft = Math.floor(totalIn / 12);
   const inch = Math.round(totalIn % 12);
   return inch === 12 ? `${ft + 1}'0"` : `${ft}'${inch}"`;
+}
+
+/**
+ * Axis-title casing: sentence-lowercase, but words containing digits or in
+ * all-caps stay as written ("1A average", "HS final average", "MBTI").
+ */
+export function axisLabel(f: Field): string {
+  const label = f.short
+    .split(" ")
+    .map((w) => (/\d/.test(w) || (w.length > 1 && w === w.toUpperCase()) ? w : w.toLowerCase()))
+    .join(" ");
+  return f.unit ? `${label} (${f.unit})` : label;
 }

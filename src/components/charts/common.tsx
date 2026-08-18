@@ -5,8 +5,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 /** ink ramp — the only "palette": grayscale steps with wide lightness separation */
 export const INK = ["#171717", "#8a8a8a", "#c9c9c9", "#ececec"];
 export const GRID = "#ececec";
+export const AXIS = "#b3b3b3"; // axis lines: a step darker than gridlines
 export const AXIS_TEXT = "#737373";
 export const SURFACE = "#ffffff";
+
+/** shared axis-title text style (serif italic, muted) */
+export const AXIS_TITLE_PROPS = {
+  fontSize: 11.5,
+  fontStyle: "italic" as const,
+  fontFamily: "var(--serif)",
+  fill: AXIS_TEXT,
+};
 
 /** responsive width via ResizeObserver */
 export function useMeasure<T extends HTMLElement>(): [React.RefObject<T | null>, number] {
@@ -80,17 +89,58 @@ export function jitterOf(seed: number): number {
   return (x - Math.floor(x)) * 2 - 1;
 }
 
-/** nice ticks for a linear axis */
+/** nice ticks for a linear axis — conventional 1/2/5/10 steps only */
 export function niceTicks(lo: number, hi: number, target = 5): number[] {
   if (lo === hi) return [lo];
   const span = hi - lo;
   const rawStep = span / target;
   const mag = 10 ** Math.floor(Math.log10(rawStep));
-  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= rawStep) ?? 10 * mag;
+  const step = [1, 2, 5, 10].map((m) => m * mag).find((s) => s >= rawStep) ?? 10 * mag;
   const start = Math.ceil(lo / step) * step;
   const ticks: number[] = [];
   for (let t = start; t <= hi + 1e-9; t += step) ticks.push(Math.round(t * 1000) / 1000);
   return ticks;
+}
+
+/**
+ * Snap an axis domain to clean tick multiples so gridlines land on labeled
+ * values and the plot edges are ticks themselves — no arbitrary bounds.
+ */
+export function niceDomain(
+  values: number[],
+  opts: { zero?: boolean; target?: number } = {}
+): { lo: number; hi: number; ticks: number[] } {
+  const target = opts.target ?? 5;
+  let lo = Math.min(...values);
+  let hi = Math.max(...values);
+  if (opts.zero) lo = Math.min(0, lo);
+  if (lo === hi) {
+    lo -= 1;
+    hi += 1;
+  }
+  const rawStep = (hi - lo) / target;
+  const mag = 10 ** Math.floor(Math.log10(rawStep));
+  const step = [1, 2, 5, 10].map((m) => m * mag).find((s) => s >= rawStep) ?? 10 * mag;
+  lo = Math.floor(lo / step + 1e-9) * step;
+  hi = Math.ceil(hi / step - 1e-9) * step;
+  const ticks: number[] = [];
+  for (let t = lo; t <= hi + step / 2; t += step) ticks.push(Math.round(t * 1000) / 1000);
+  return { lo: Math.round(lo * 1000) / 1000, hi: Math.round(hi * 1000) / 1000, ticks };
+}
+
+/** integer-only ticks for count axes: 0 upward in 1/2/5/10·10^k steps */
+export function countDomain(max: number, target = 4): { hi: number; ticks: number[] } {
+  const m = Math.max(max, 1);
+  const rawStep = m / target;
+  const mag = 10 ** Math.floor(Math.log10(rawStep));
+  const step = Math.max(
+    1,
+    [1, 2, 5, 10].map((x) => x * mag).find((s) => s >= rawStep) ?? 10 * mag
+  );
+  const hi = Math.ceil(m / step) * step;
+  const ticks: number[] = [];
+  for (let t = 0; t <= hi; t += step) ticks.push(t);
+  return { hi, ticks };
 }
 
 export function extent(xs: number[], padFrac = 0.05): [number, number] {

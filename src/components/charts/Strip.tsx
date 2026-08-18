@@ -1,16 +1,17 @@
 "use client";
 
-import { Field, fmtValue, median, cmToFtIn } from "@/lib/data";
+import { Field, fmtValue, median, cmToFtIn, axisLabel } from "@/lib/data";
 import {
   INK,
   GRID,
+  AXIS,
   AXIS_TEXT,
+  AXIS_TITLE_PROPS,
   SURFACE,
   useMeasure,
   useTooltip,
   Tooltip,
-  niceTicks,
-  extent,
+  niceDomain,
   jitterOf,
 } from "./common";
 
@@ -28,7 +29,7 @@ interface Props {
 const PAD_L = 150;
 const PAD_R = 56;
 const PAD_T = 6;
-const PAD_B = 26;
+const PAD_B = 44;
 
 export default function Strip({ rows, numField, rowH: rowHProp }: Props) {
   // few rows get more vertical room so the jittered dots can actually separate
@@ -38,7 +39,7 @@ export default function Strip({ rows, numField, rowH: rowHProp }: Props) {
 
   const all = rows.flatMap((r) => r.values.map((x) => x.v));
   if (all.length === 0) return null;
-  const [lo, hi] = extent(all);
+  const { lo, hi, ticks } = niceDomain(all, { target: 6 });
   const plotW = Math.max(width - PAD_L - PAD_R, 40);
   const height = PAD_T + rows.length * rowH + PAD_B;
   const sx = (v: number) => PAD_L + ((v - lo) / (hi - lo)) * plotW;
@@ -50,7 +51,7 @@ export default function Strip({ rows, numField, rowH: rowHProp }: Props) {
     <div ref={ref} style={{ position: "relative" }}>
       {width > 0 && (
         <svg className="chart-svg" width={width} height={height} role="img">
-          {niceTicks(lo, hi).map((t) => (
+          {ticks.map((t) => (
             <g key={t}>
               <line
                 x1={sx(t)}
@@ -60,7 +61,7 @@ export default function Strip({ rows, numField, rowH: rowHProp }: Props) {
                 stroke={GRID}
                 strokeWidth={1}
               />
-              <text x={sx(t)} y={height - 8} textAnchor="middle" fontSize={11} fill={AXIS_TEXT}>
+              <text x={sx(t)} y={height - PAD_B + 15} textAnchor="middle" fontSize={11} fill={AXIS_TEXT}>
                 {numField.kind === "date"
                   ? fmtValue(numField, t)
                   : Math.abs(t) >= 1000
@@ -69,6 +70,18 @@ export default function Strip({ rows, numField, rowH: rowHProp }: Props) {
               </text>
             </g>
           ))}
+          {/* bottom axis line + title */}
+          <line
+            x1={PAD_L}
+            y1={height - PAD_B}
+            x2={PAD_L + plotW}
+            y2={height - PAD_B}
+            stroke={AXIS}
+            strokeWidth={1}
+          />
+          <text x={PAD_L + plotW / 2} y={height - 6} textAnchor="middle" {...AXIS_TITLE_PROPS}>
+            {axisLabel(numField)}
+          </text>
           {rows.map((row, i) => {
             const cy = PAD_T + i * rowH + rowH / 2;
             const med = row.values.length ? median(row.values.map((x) => x.v)) : null;

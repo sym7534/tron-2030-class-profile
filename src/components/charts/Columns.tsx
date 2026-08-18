@@ -1,6 +1,17 @@
 "use client";
 
-import { INK, GRID, AXIS_TEXT, barPathV, useMeasure, useTooltip, Tooltip, niceTicks } from "./common";
+import {
+  INK,
+  GRID,
+  AXIS,
+  AXIS_TEXT,
+  AXIS_TITLE_PROPS,
+  barPathV,
+  useMeasure,
+  useTooltip,
+  Tooltip,
+  countDomain,
+} from "./common";
 
 export interface ColumnDatum {
   label: string;
@@ -13,52 +24,68 @@ interface Props {
   height?: number;
   /** show the count on each column cap (only sensible for few columns) */
   capLabels?: boolean;
+  /** axis titles */
+  xTitle?: string;
+  yTitle?: string;
 }
 
-const PAD_L = 30;
-const PAD_B = 22;
-const PAD_T = 14;
+const PAD_L = 46;
+const PAD_R = 8;
 const MAX_COL_W = 24; // dataviz spec: bars never thicker than 24px
 
-export default function Columns({ data, height = 190, capLabels }: Props) {
+export default function Columns({ data, height = 200, capLabels, xTitle, yTitle }: Props) {
   const [ref, width] = useMeasure<HTMLDivElement>();
   const { tip, show, hide } = useTooltip();
 
+  const PAD_T = 12;
+  const PAD_B = xTitle ? 40 : 24;
+
   const max = Math.max(...data.map((d) => d.count), 1);
-  const plotW = Math.max(width - PAD_L - 8, 40);
+  const { hi, ticks } = countDomain(max, 4);
+  const plotW = Math.max(width - PAD_L - PAD_R, 40);
   const plotH = height - PAD_B - PAD_T;
   const slot = plotW / Math.max(data.length, 1);
   const colW = Math.min(slot - 2, MAX_COL_W); // ≥2px surface gap between columns
-  const ticks = niceTicks(0, max, 4).filter((t) => t > 0 && Number.isInteger(t));
   const showCaps = capLabels && slot >= 18;
   // sparse x labels when columns are dense
   const labelEvery = Math.ceil(data.length / Math.floor(Math.max(plotW / 56, 2)));
+  const sy = (t: number) => PAD_T + plotH - (t / hi) * plotH;
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
       {width > 0 && (
         <svg className="chart-svg" width={width} height={height} role="img">
-          {ticks.map((t) => {
-            const y = PAD_T + plotH - (t / max) * plotH;
-            return (
-              <g key={t}>
-                <line x1={PAD_L} y1={y} x2={width - 4} y2={y} stroke={GRID} strokeWidth={1} />
-                <text x={PAD_L - 6} y={y + 3.5} textAnchor="end" fontSize={11} fill={AXIS_TEXT}>
-                  {t}
-                </text>
-              </g>
-            );
-          })}
-          <line
-            x1={PAD_L}
-            y1={PAD_T + plotH}
-            x2={width - 4}
-            y2={PAD_T + plotH}
-            stroke={GRID}
-            strokeWidth={1}
-          />
+          {/* horizontal gridlines at every labeled tick, axis-line at zero */}
+          {ticks.map((t) => (
+            <g key={t}>
+              <line
+                x1={PAD_L}
+                y1={sy(t)}
+                x2={width - PAD_R}
+                y2={sy(t)}
+                stroke={t === 0 ? AXIS : GRID}
+                strokeWidth={1}
+              />
+              <text x={PAD_L - 7} y={sy(t) + 3.5} textAnchor="end" fontSize={11} fill={AXIS_TEXT}>
+                {t}
+              </text>
+            </g>
+          ))}
+          {/* y axis line */}
+          <line x1={PAD_L} y1={PAD_T} x2={PAD_L} y2={PAD_T + plotH} stroke={AXIS} strokeWidth={1} />
+          {yTitle && (
+            <text
+              transform={`rotate(-90 12 ${PAD_T + plotH / 2})`}
+              x={12}
+              y={PAD_T + plotH / 2}
+              textAnchor="middle"
+              {...AXIS_TITLE_PROPS}
+            >
+              {yTitle}
+            </text>
+          )}
           {data.map((d, i) => {
-            const h = (d.count / max) * plotH;
+            const h = (d.count / hi) * plotH;
             const x = PAD_L + i * slot + (slot - colW) / 2;
             const y = PAD_T + plotH - h;
             return (
@@ -88,7 +115,7 @@ export default function Columns({ data, height = 190, capLabels }: Props) {
                 {i % labelEvery === 0 && (
                   <text
                     x={PAD_L + i * slot + slot / 2}
-                    y={height - 6}
+                    y={PAD_T + plotH + 15}
                     textAnchor="middle"
                     fontSize={11}
                     fill={AXIS_TEXT}
@@ -99,6 +126,16 @@ export default function Columns({ data, height = 190, capLabels }: Props) {
               </g>
             );
           })}
+          {xTitle && (
+            <text
+              x={PAD_L + plotW / 2}
+              y={height - 7}
+              textAnchor="middle"
+              {...AXIS_TITLE_PROPS}
+            >
+              {xTitle}
+            </text>
+          )}
         </svg>
       )}
       <Tooltip tip={tip} width={width} />

@@ -1,16 +1,17 @@
 "use client";
 
-import { Field, fmtValue, linreg, cmToFtIn } from "@/lib/data";
+import { Field, fmtValue, linreg, cmToFtIn, axisLabel } from "@/lib/data";
 import {
   INK,
   GRID,
+  AXIS,
+  AXIS_TITLE_PROPS,
   AXIS_TEXT,
   SURFACE,
   useMeasure,
   useTooltip,
   Tooltip,
-  niceTicks,
-  extent,
+  niceDomain,
   jitterOf,
 } from "./common";
 import { useMemo, useState } from "react";
@@ -31,8 +32,8 @@ interface Props {
   trend?: boolean;
 }
 
-const PAD_L = 44;
-const PAD_B = 30;
+const PAD_L = 58;
+const PAD_B = 46;
 const PAD_T = 12;
 const PAD_R = 14;
 
@@ -61,8 +62,14 @@ export default function Scatter({ points, xField, yField, height = 320, identity
 
   if (points.length === 0) return null;
 
-  const [xLo, xHi] = extent(jittered.map((p) => p.px));
-  const [yLo, yHi] = extent(jittered.map((p) => p.py));
+  // axis domains snapped to clean tick multiples: gridlines land on labeled
+  // values and the plot edges are ticks themselves — no arbitrary bounds
+  const xd = niceDomain(jittered.map((p) => p.px), { target: 6 });
+  const yd = niceDomain(jittered.map((p) => p.py), { target: 5 });
+  const xLo = xd.lo, xHi = xd.hi;
+  const yLo = yd.lo, yHi = yd.hi;
+  const xTicks = xd.ticks;
+  const yTicks = yd.ticks;
   const plotW = Math.max(width - PAD_L - PAD_R, 40);
   const plotH = height - PAD_T - PAD_B;
   const sx = (v: number) => PAD_L + ((v - xLo) / (xHi - xLo)) * plotW;
@@ -116,7 +123,7 @@ export default function Scatter({ points, xField, yField, height = 320, identity
             hide();
           }}
         >
-          {niceTicks(yLo, yHi).map((t) => (
+          {yTicks.map((t) => (
             <g key={`y${t}`}>
               <line x1={PAD_L} y1={sy(t)} x2={width - PAD_R} y2={sy(t)} stroke={GRID} strokeWidth={1} />
               <text x={PAD_L - 7} y={sy(t) + 3.5} textAnchor="end" fontSize={11} fill={AXIS_TEXT}>
@@ -124,14 +131,37 @@ export default function Scatter({ points, xField, yField, height = 320, identity
               </text>
             </g>
           ))}
-          {niceTicks(xLo, xHi).map((t) => (
+          {xTicks.map((t) => (
             <g key={`x${t}`}>
               <line x1={sx(t)} y1={PAD_T} x2={sx(t)} y2={PAD_T + plotH} stroke={GRID} strokeWidth={1} />
-              <text x={sx(t)} y={height - 10} textAnchor="middle" fontSize={11} fill={AXIS_TEXT}>
+              <text x={sx(t)} y={PAD_T + plotH + 15} textAnchor="middle" fontSize={11} fill={AXIS_TEXT}>
                 {fmtAxis(xField, t)}
               </text>
             </g>
           ))}
+          {/* axis frame: left + bottom */}
+          <line x1={PAD_L} y1={PAD_T} x2={PAD_L} y2={PAD_T + plotH} stroke={AXIS} strokeWidth={1} />
+          <line
+            x1={PAD_L}
+            y1={PAD_T + plotH}
+            x2={width - PAD_R}
+            y2={PAD_T + plotH}
+            stroke={AXIS}
+            strokeWidth={1}
+          />
+          {/* axis titles with units */}
+          <text x={PAD_L + plotW / 2} y={height - 6} textAnchor="middle" {...AXIS_TITLE_PROPS}>
+            {axisLabel(xField)}
+          </text>
+          <text
+            transform={`rotate(-90 13 ${PAD_T + plotH / 2})`}
+            x={13}
+            y={PAD_T + plotH / 2}
+            textAnchor="middle"
+            {...AXIS_TITLE_PROPS}
+          >
+            {axisLabel(yField)}
+          </text>
           {identity &&
             (() => {
               const lo = Math.max(xLo, yLo);
