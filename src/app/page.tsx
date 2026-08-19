@@ -9,7 +9,7 @@ import Waffle from "@/components/charts/Waffle";
 function heroStats() {
   const wages = numericValues("wage");
   const apps = numericValues("jobsApplied");
-  const caffeine = numericValues("caffeine");
+  const distance = numericValues("distanceKm");
   const cum = numericValues("cumAvg");
   return [
     { value: `${Math.round(median(cum) * 10) / 10}%`, label: "median first-year average" },
@@ -19,8 +19,8 @@ function heroStats() {
       label: "applications sent, total",
     },
     {
-      value: `${Math.round(median(caffeine))} mg`,
-      label: "median daily caffeine",
+      value: `${Math.round(distance.reduce((a, b) => a + b, 0)).toLocaleString("en-CA")} km`,
+      label: "combined distance from home — almost 3× around the Earth",
     },
   ];
 }
@@ -107,11 +107,6 @@ export default function Home() {
         })}
 
         <footer className="page-footer">
-          <p>
-            <span className="tnum">{N}</span> respondents &middot;{" "}
-            <span className="tnum">{totalQuestions}</span> questions &middot; built from the class
-            survey spreadsheet, names and emails never read.
-          </p>
           <p className="muted">Mechatronics Engineering 2030 &middot; University of Waterloo</p>
         </footer>
       </main>

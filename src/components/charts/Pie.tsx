@@ -14,8 +14,8 @@ interface Props {
   size?: number;
 }
 
-/** monochrome shade ramp, darkest = biggest slice (data sorted by count) */
-const SHADES = ["#171717", "#5c5c5c", "#8f8f8f", "#b8b8b8", "#d7d7d7", "#ececec"];
+/** waterloo purple ramp, deepest = biggest slice (data sorted by count) */
+const SHADES = ["#5D0096", "#865DA4", "#A05DCB", "#C2A8F0", "#dcc9f7", "#efe6fb"];
 
 function arcPath(cx: number, cy: number, r: number, a0: number, a1: number): string {
   // full circle can't be drawn with one arc — split it
@@ -95,7 +95,7 @@ export default function Pie({ data, total, size = 210 }: Props) {
               const lr = r * 0.62;
               const x = cx + lr * Math.sin(s.mid);
               const y = cy - lr * Math.cos(s.mid);
-              const dark = ["#171717", "#5c5c5c"].includes(s.shade);
+              const dark = ["#5D0096", "#865DA4"].includes(s.shade);
               return (
                 <text
                   key={s.label}

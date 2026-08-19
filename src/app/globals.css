@@ -278,6 +278,7 @@ select:focus {
   font-weight: 600;
   line-height: 1.1;
   font-variant-numeric: normal; /* proportional figures at display size */
+  color: #5d0096; /* waterloo engineering purple */
 }
 .hero-stat-label {
   font-size: 14px;
@@ -289,7 +290,7 @@ select:focus {
 .chapter {
   max-width: 1060px;
   margin: 0 auto;
-  padding: clamp(3rem, 8vh, 5rem) 24px 0;
+  padding: clamp(5rem, 14vh, 9rem) 24px 0; /* generous gap: entering a new section should feel like a chapter break */
 }
 /* the dashboard breathes more: extra room after the hero and before the chapters */
 .builder-section {

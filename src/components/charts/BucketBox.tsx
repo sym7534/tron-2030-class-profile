@@ -172,7 +172,7 @@ export default function BucketBox({
                           y={sy(s.hi1)}
                           width={BOX_W}
                           height={Math.max(sy(s.lo1) - sy(s.hi1), 2)}
-                          fill="#dcdcdc"
+                          fill="#C2A8F0"
                           rx={2}
                         />
                       )}

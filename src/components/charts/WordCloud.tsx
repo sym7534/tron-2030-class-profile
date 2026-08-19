@@ -66,13 +66,13 @@ function fontSize(count: number, maxCount: number, t: number): number {
 }
 
 function fill(count: number, t: number): string {
-  if (count >= 3) return "#171717";
-  if (count === 2) return "#333333";
-  // singles fan out across the gray ramp by hash
-  if (t > 0.78) return "#1f1f1f";
-  if (t > 0.52) return "#454545";
-  if (t > 0.26) return "#6b6b6b";
-  return "#8f8f8f";
+  if (count >= 3) return "#5D0096";
+  if (count === 2) return "#865DA4";
+  // singles fan out across the purple ramp by hash
+  if (t > 0.78) return "#865DA4";
+  if (t > 0.52) return "#A05DCB";
+  if (t > 0.26) return "#B085DD";
+  return "#C2A8F0";
 }
 
 function weight(count: number, t: number): number {

@@ -18,7 +18,12 @@ const server = http.createServer((req, res) => {
   fs.createReadStream(fp).pipe(res);
 });
 
-const ALLOWED = new Set(["#5D0096", "#865DA4", "#A05DCB", "#C2A8F0"].map((s) => s.toLowerCase()));
+const ALLOWED = new Set(
+  [
+    "#5D0096", "#865DA4", "#A05DCB", "#C2A8F0", // bars + big pie slices
+    "#dcc9f7", "#efe6fb", // pie tail shades
+  ].map((s) => s.toLowerCase())
+);
 
 (async () => {
   await new Promise((r) => server.listen(PORT, "127.0.0.1", r));
@@ -36,7 +41,7 @@ const ALLOWED = new Set(["#5D0096", "#865DA4", "#A05DCB", "#C2A8F0"].map((s) => 
   const audit = await p.evaluate(() => {
     const out = { charts: 0, fills: {}, gradients: 0, byCard: {} };
     for (const svg of document.querySelectorAll("article svg, .builder svg")) {
-      if (svg.closest("[data-pie]")) continue; // pies are monochrome by design
+      // pies now purple too — include them in the audit
       // bars are <path> with a fill starting with # (columns/bars only; ignore lines/text)
       const bars = [...svg.querySelectorAll("path[fill]")].filter((el) => {
         const f = el.getAttribute("fill") || "";
