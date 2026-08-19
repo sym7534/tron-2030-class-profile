@@ -17,12 +17,10 @@ import {
   answeredCount,
   countNoun,
 } from "@/lib/data";
-import { PRESETS } from "@/lib/sections";
 import BucketBox, { Bucket } from "./charts/BucketBox";
 import Heatmap from "./charts/Heatmap";
 import BarsH from "./charts/BarsH";
 import Histogram from "./charts/Histogram";
-import ChartFrame from "./ChartFrame";
 import { numericBuckets, bucketTable } from "@/lib/buckets";
 import { axisLabel } from "@/lib/data";
 
@@ -44,7 +42,6 @@ export default function GraphBuilder() {
   const [yId, setYId] = useState("");
   const [filterId, setFilterId] = useState("");
   const [filterVal, setFilterVal] = useState("");
-  const [preset, setPreset] = useState<string | null>(null);
   // dashboard display toggles
   const [grid, setGrid] = useState(true);
   const [sd1, setSd1] = useState(true);
@@ -67,7 +64,6 @@ export default function GraphBuilder() {
     if ((hx && (hx === COUNT || fieldById[hx])) || (hy && (hy === COUNT || fieldById[hy]))) {
       if (hx) setXId(hx);
       if (hy) setYId(hy);
-      setPreset(null);
       touched.current = true;
     }
     if (hf && fieldById[hf]) {
@@ -99,18 +95,44 @@ export default function GraphBuilder() {
     return survey.rows.filter((r) => categoriesOf(r, filterField).includes(filterVal));
   }, [filterField, filterVal]);
 
-  const applyPreset = (p: (typeof PRESETS)[number]) => {
-    touched.current = true;
-    setXId(p.x);
-    setYId(p.y);
-    setPreset(p.name);
+  // ---- save the current chart as a PNG (serialize the SVG onto a canvas)
+  const frameRef = useRef<HTMLDivElement | null>(null);
+  const saveChart = () => {
+    const svg = frameRef.current?.querySelector("svg");
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const scale = 2; // crisp export
+    const clone = svg.cloneNode(true) as SVGSVGElement;
+    clone.setAttribute("width", String(rect.width));
+    clone.setAttribute("height", String(rect.height));
+    // inline the CSS-var driven fonts/colors so the export matches the page
+    clone.setAttribute("style", "font-family: Arial, Helvetica, sans-serif; background:#ffffff");
+    const xml = new XMLSerializer().serializeToString(clone);
+    const blob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(rect.width * scale);
+      canvas.height = Math.round(rect.height * scale);
+      const ctx = canvas.getContext("2d")!;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      const a = document.createElement("a");
+      const name = title.replace(/[^\w]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase() || "chart";
+      a.download = `tron2030-${name}.png`;
+      a.href = canvas.toDataURL("image/png");
+      a.click();
+    };
+    img.src = url;
   };
 
   const swap = () => {
     touched.current = true;
     setXId(yId);
     setYId(xId);
-    setPreset(null);
   };
 
   const grouped = useMemo(() => {
@@ -348,7 +370,6 @@ export default function GraphBuilder() {
       onChange={(e) => {
         touched.current = true;
         onChange(e.target.value);
-        setPreset(null);
       }}
     >
       <option value="">&mdash; select &mdash;</option>
@@ -365,8 +386,6 @@ export default function GraphBuilder() {
       ))}
     </select>
   );
-
-  const activePreset = PRESETS.find((p) => p.name === preset);
 
   // which display toggles make sense for the current chart
   const isBucketNum = !!(xf && yf) && isNum(xf) && isNum(yf);
@@ -386,11 +405,18 @@ export default function GraphBuilder() {
           </span>
         )}
       </h3>
-      {activePreset && <p className="preset-blurb">{activePreset.quip}</p>}
 
-      <ChartFrame caption={caption} table={table}>
+      <div className="chart-frame card" ref={frameRef}>
         {body}
-      </ChartFrame>
+        <div className="chart-foot">
+          <span className="muted chart-caption">{caption}</span>
+          {(xf || yf) && (
+            <span className="chart-views">
+              <button onClick={saveChart}>save</button>
+            </span>
+          )}
+        </div>
+      </div>
 
       <div className="axis-row" style={{ marginTop: 30, marginBottom: 0 }}>
         <span className="axis-ctl">
@@ -492,19 +518,6 @@ export default function GraphBuilder() {
           )}
         </div>
       )}
-
-      <div className="preset-row" style={{ marginTop: 18, marginBottom: 0 }}>
-        {PRESETS.map((p) => (
-          <button
-            key={p.name}
-            onClick={() => applyPreset(p)}
-            title={p.quip}
-            className={preset === p.name ? "toggle-active" : undefined}
-          >
-            {p.name}
-          </button>
-        ))}
-      </div>
 
       <div className="builder-foot">
         {filterVal && (

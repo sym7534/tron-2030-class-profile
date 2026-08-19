@@ -59,12 +59,7 @@ const server = http.createServer((req, res) => {
   console.log(ok2 ? "SELECT FLOW OK" : "SELECT FLOW FAIL");
   if (!ok2) failures++;
 
-  // presets still apply
-  await p.click(".preset-row button >> nth=0");
-  await p.waitForTimeout(500);
-  const preset = await p.evaluate(() => document.querySelector(".builder-title")?.innerText);
-  console.log("after preset:", preset);
-  if (!preset || /Compare any stat/.test(preset)) { console.log("PRESET FAIL"); failures++; }
+  // presets removed by design — nothing to click
 
   await p.screenshot({ path: "shots/19-empty-builder.png" });
   await b.close();

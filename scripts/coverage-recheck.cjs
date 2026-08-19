@@ -75,18 +75,16 @@ const survey = JSON.parse(fs.readFileSync("src/data/survey.json", "utf8"));
     return texts;
   });
   const tableRows = await p.evaluate(() => {
-    [...document.querySelectorAll(".builder .chart-views button")]
-      .find((b) => b.innerText.trim() === "table")
-      ?.click();
+    const card = document.querySelector("article[id^='cmp-wage-cumAvg']");
+    if (!card) return [];
+    const btn = [...card.querySelectorAll("button")].find((b) => /table/.test(b.innerText));
+    btn?.click();
     return new Promise((res) =>
       setTimeout(() => {
-        const rows = [...document.querySelectorAll(".builder .data-table tbody tr")].map((tr) =>
+        const rows = [...card.querySelectorAll(".data-table tbody tr")].map((tr) =>
           [...tr.querySelectorAll("td")].map((td) => td.innerText.trim())
         );
-        // switch back to chart for later steps
-        [...document.querySelectorAll(".builder .chart-views button")]
-          .find((b) => b.innerText.trim() === "chart")
-          ?.click();
+        btn?.click(); // back to chart
         res(rows);
       }, 250)
     );
@@ -130,43 +128,45 @@ const survey = JSON.parse(fs.readFileSync("src/data/survey.json", "utf8"));
     failures++;
   }
 
-  // ---------- 3. table twin must be aggregate-only
-  await p.evaluate(() => {
-    [...document.querySelectorAll(".builder .chart-views button")]
-      .find((b) => b.innerText.trim() === "table")
-      ?.click();
-  });
-  await p.waitForTimeout(300);
+  // ---------- 3. comparison-card table must be aggregate-only
   const tbl = await p.evaluate(() => {
-    const headers = [...document.querySelectorAll(".builder .data-table th")].map((h) => h.innerText);
-    const firstCol = [...document.querySelectorAll(".builder .data-table tbody tr td:first-child")].map(
-      (c) => c.innerText
+    const card = document.querySelector("article[id^='cmp-wage-cumAvg']");
+    if (!card) return null;
+    const btn = [...card.querySelectorAll("button")].find((b) => /table/.test(b.innerText));
+    btn?.click();
+    return new Promise((res) =>
+      setTimeout(() => {
+        const headers = [...card.querySelectorAll(".data-table th")].map((h) => h.innerText);
+        const firstCol = [...card.querySelectorAll(".data-table tbody tr td:first-child")].map(
+          (c) => c.innerText
+        );
+        btn?.click();
+        res({ headers, firstCol: firstCol.slice(0, 6) });
+      }, 250)
     );
-    return { headers, firstCol: firstCol.slice(0, 6) };
   });
-  console.log("table headers:", JSON.stringify(tbl.headers));
-  const personRows = tbl.firstCol.filter((c) => /^#\d+$/.test(c)).length;
-  const aggOk = tbl.headers.includes("bucket") && personRows === 0;
-  console.log(aggOk ? "table is aggregate-only OK" : `FAIL: table leaks persons (${personRows})`);
-  if (!aggOk) failures++;
+  if (!tbl) { console.log("FAIL: cmp card table missing"); failures++; }
+  else {
+    console.log("table headers:", JSON.stringify(tbl.headers));
+    const personRows = tbl.firstCol.filter((c) => /^#\d+$/.test(c)).length;
+    const aggOk = tbl.headers.includes("bucket") && personRows === 0;
+    console.log(aggOk ? "table is aggregate-only OK" : `FAIL: table leaks persons (${personRows})`);
+    if (!aggOk) failures++;
+  }
 
   // ---------- 4. heatmap full coverage: fav1A × residence (residence has >10 cats)
   await p.selectOption("#x-axis", "residence");
   await p.selectOption("#y-axis", "attend1A");
   await p.waitForTimeout(500);
   const heatTotal = await p.evaluate(() => {
-    // switch to table view for exact numbers
-    [...document.querySelectorAll(".builder .chart-views button")]
-      .find((b) => b.innerText.trim() === "table")
-      ?.click();
-    return new Promise((res) =>
-      setTimeout(() => {
-        const cells = [...document.querySelectorAll(".builder .data-table tbody td")]
-          .map((c) => parseInt(c.innerText, 10))
-          .filter((v) => Number.isFinite(v));
-        res(cells.reduce((a, b) => a + b, 0));
-      }, 250)
-    );
+    // heatmap renders one <text> per non-empty cell; the row/column labels are
+    // non-numeric, so summing numeric texts inside the chart = total count
+    const svg = document.querySelector(".builder .chart-frame svg");
+    if (!svg) return -1;
+    return [...svg.querySelectorAll("text")]
+      .map((t) => t.textContent.trim())
+      .filter((t) => /^\d+$/.test(t))
+      .reduce((a, b) => a + parseInt(b, 10), 0);
   });
   const expectHeat = survey.rows.reduce((a, r) => {
     const xs = Array.isArray(r.residence) ? r.residence : r.residence ? [r.residence] : [];

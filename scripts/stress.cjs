@@ -28,20 +28,8 @@ const server = http.createServer((req, res) => {
   await p.waitForTimeout(1200);
   await p.evaluate(() => document.querySelector("#builder").scrollIntoView());
 
-  // ---- every preset button
-  const presets = await p.$$eval(".preset-row button", (bs) => bs.map((b) => b.innerText));
-  let presetBad = 0;
-  for (const name of presets) {
-    await p.click(`.preset-row button:text-is("${name}")`);
-    await p.waitForTimeout(320);
-    const st = await p.evaluate(() => {
-      const bd = document.querySelector(".builder");
-      const svg = bd.querySelector("svg");
-      return { h: svg ? Math.round(svg.getBoundingClientRect().height) : 0, title: bd.querySelector(".builder-title")?.innerText };
-    });
-    if (st.h < 40) { console.log("  PRESET EMPTY:", name, JSON.stringify(st)); presetBad++; }
-  }
-  console.log(`presets: ${presets.length} tested, ${presetBad} empty`);
+  const presetBad = 0; // presets removed from the builder by design
+  console.log("presets: removed (0 to test)");
 
   // ---- sweep axis pairs
   const opts = await p.$$eval("#x-axis option", (os) => os.map((o) => o.value));

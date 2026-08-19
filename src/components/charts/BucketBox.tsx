@@ -94,6 +94,12 @@ export default function BucketBox({
   const fmt = (v: number) => fmtValue(yField, v);
   const fmtShort = (v: number) =>
     Math.abs(v) >= 1000 ? `${Math.round(v / 100) / 10}k` : String(Math.round(v * 10) / 10);
+  /** truncate a bucket label only when it genuinely can't fit its slot
+   *  (≈7px/char at 13px; small buffer keeps neighbours from touching) */
+  const clipLabel = (label: string, px: number, perChar: number) => {
+    const maxChars = Math.max(4, Math.floor(px / perChar));
+    return label.length > maxChars ? label.slice(0, maxChars - 1) + "…" : label;
+  };
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
@@ -254,12 +260,12 @@ export default function BucketBox({
                     fontSize={11.5}
                     fill="#171717"
                   >
-                    {s.label.length > 12 ? s.label.slice(0, 11) + "…" : s.label}
+                    {clipLabel(s.label, Math.min(slot * 1.6, 150), 6.2)}
                   </text>
                 ) : (
                   <>
                     <text x={cx} y={PAD_T + plotH + 16} textAnchor="middle" fontSize={13} fill="#171717">
-                      {s.label.length > 14 ? s.label.slice(0, 13) + "…" : s.label}
+                      {clipLabel(s.label, slot - 6, 7)}
                     </text>
                   </>
                 )}
