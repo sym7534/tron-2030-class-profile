@@ -43,6 +43,35 @@ export interface Preset {
   identity?: boolean;
 }
 
+/** Cross-question comparison cards that lead their section, before the
+ *  single-question cards. Same aggregate-bucket presentation as the builder. */
+export interface SectionComparison {
+  y: string;
+  x: string;
+  title: string;
+  note?: string;
+}
+
+export const SECTION_COMPARISONS: Record<string, SectionComparison[]> = {
+  coop: [
+    { y: "wage", x: "cumAvg", title: "Hourly pay vs. cumulative average" },
+    { y: "wage", x: "jobType", title: "Hourly pay vs. type of job" },
+    { y: "wage", x: "workCity", title: "Hourly pay vs. location" },
+    { y: "wage", x: "gender", title: "Hourly pay vs. gender" },
+  ],
+  firstyear: [
+    { y: "cumAvg", x: "hsAvg", title: "Uni average vs. high school average" },
+    { y: "cumAvg", x: "fromGroup", title: "Uni average vs. hometown" },
+    {
+      y: "cumAvg",
+      x: "caffeine",
+      title: "Uni average vs. daily caffeine",
+      note: "the thought-provoking one: does the mg arms race pay off?",
+    },
+    { y: "cumAvg", x: "enriched", title: "Uni average vs. high school program" },
+  ],
+};
+
 export const PRESETS: Preset[] = [
   { name: "does the grind pay?", quip: "applications sent vs. hourly wage", x: "jobsApplied", y: "wage" },
   { name: "the great deflation", quip: "the average you came with vs. the one 1A gave you", x: "applyAvg", y: "avg1A", identity: true },

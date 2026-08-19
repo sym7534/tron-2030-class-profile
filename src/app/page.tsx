@@ -1,7 +1,8 @@
 import { survey, N, numericValues, median, distribution } from "@/lib/data";
-import { SECTIONS, sectionFieldIds, questionNumbers } from "@/lib/sections";
+import { SECTIONS, sectionFieldIds, questionNumbers, SECTION_COMPARISONS } from "@/lib/sections";
 import GraphBuilder from "@/components/GraphBuilder";
 import QuestionCard from "@/components/QuestionCard";
+import ComparisonCard from "@/components/ComparisonCard";
 import LenisScroll from "@/components/LenisScroll";
 import Waffle from "@/components/charts/Waffle";
 
@@ -94,6 +95,9 @@ export default function Home() {
                 <h2 className="section-header">{s.title}</h2>
               </div>
               <div className={s.id === "words" ? "card-grid one-col" : "card-grid"}>
+                {(SECTION_COMPARISONS[s.id] ?? []).map((c) => (
+                  <ComparisonCard key={`${c.y}-${c.x}`} spec={c} />
+                ))}
                 {ids.map((id) => (
                   <QuestionCard key={id} id={id} qNum={qNums[id]} />
                 ))}
