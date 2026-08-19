@@ -57,10 +57,10 @@ export default function Home() {
             ENGINEERING 2030
           </h1>
           <p className="hero-lede">
-            <span className="tnum">{N}</span> of us answered{" "}
-            <span className="tnum">{totalQuestions}</span> questions about where we came from,
-            what first year did to us, and what we actually think. Every dot below is one
-            person.
+            Welcome to the University of Waterloo Mechatronics Engineering Class of 2030
+            class profile! A total of <span className="tnum">{N}</span> people answered{" "}
+            <span className="tnum">{totalQuestions}</span> unique questions; check out the
+            results below.
           </p>
 
           <div className="hero-waffle">

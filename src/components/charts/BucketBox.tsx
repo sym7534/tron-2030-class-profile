@@ -36,7 +36,7 @@ interface Props {
 const PAD_L = 58;
 const PAD_R = 14;
 const PAD_T = 16;
-const PAD_B_BASE = 56;
+const PAD_B_BASE = 44; // range labels + axis title (no n= row)
 const BOX_W = 26; // ±1σ box; ±2σ and min/max caps share this width
 
 function sd(xs: number[], m: number): number {
@@ -261,9 +261,6 @@ export default function BucketBox({
                     <text x={cx} y={PAD_T + plotH + 16} textAnchor="middle" fontSize={13} fill="#171717">
                       {s.label.length > 14 ? s.label.slice(0, 13) + "…" : s.label}
                     </text>
-                    <text x={cx} y={PAD_T + plotH + 29} textAnchor="middle" fontSize={11.5} fill={AXIS_TEXT}>
-                      n={s.n}
-                    </text>
                   </>
                 )}
               </g>
@@ -283,47 +280,6 @@ export default function BucketBox({
           </text>
         </svg>
       )}
-      <div className="secondary" style={{ fontSize: 14, marginTop: 6 }}>
-        {showSd1 ? (
-          <>
-            <svg width={11} height={13} aria-hidden style={{ verticalAlign: "-2px", marginRight: 4 }}>
-              <rect x={2} y={1.5} width={7} height={10} fill="#dcdcdc" rx={1} />
-              <line x1={2} y1={6.5} x2={9} y2={6.5} stroke="#171717" strokeWidth={1.5} />
-            </svg>
-            box = mean ± 1σ, black line = mean&ensp;·&ensp;
-          </>
-        ) : (
-          <>
-            <svg width={11} height={13} aria-hidden style={{ verticalAlign: "-2px", marginRight: 4 }}>
-              <line x1={2} y1={6.5} x2={9} y2={6.5} stroke="#171717" strokeWidth={2} />
-            </svg>
-            black line = mean&ensp;·&ensp;
-          </>
-        )}
-        {showSd2 && (
-          <>
-            <svg width={11} height={13} aria-hidden style={{ verticalAlign: "-2px", marginRight: 4 }}>
-              <line x1={5.5} y1={1} x2={5.5} y2={12} stroke="#171717" strokeWidth={2} />
-              <line x1={1} y1={1} x2={10} y2={1} stroke="#171717" strokeWidth={2} />
-              <line x1={1} y1={12} x2={10} y2={12} stroke="#171717" strokeWidth={2} />
-            </svg>
-            solid line = ± 2σ&ensp;·&ensp;
-          </>
-        )}
-        <svg width={11} height={13} aria-hidden style={{ verticalAlign: "-2px", marginRight: 4 }}>
-          <line
-            x1={5.5}
-            y1={1.5}
-            x2={5.5}
-            y2={11.5}
-            stroke="#171717"
-            strokeWidth={1.5}
-            strokeDasharray="1.5 3"
-            strokeLinecap="round"
-          />
-        </svg>
-        dotted = min–max
-      </div>
       <Tooltip tip={tip} width={width} />
     </div>
   );
