@@ -16,6 +16,9 @@ import {
   MINOR_GRID,
 } from "./common";
 
+/** deep tone for whiskers/mean so they read over the sigma box */
+const DEEP = "#171717";
+
 export interface Bucket {
   label: string;
   values: number[];
@@ -88,7 +91,7 @@ export default function BucketBox({
   // narrow slots (phones / many buckets): hide side value-labels (tooltip and
   // table still carry them), rotate bucket labels so they can't collide
   const compact = slot < 92;
-  const PAD_B = compact ? 78 : PAD_B_BASE; // rotated labels need more floor
+  const PAD_B = compact ? 84 : PAD_B_BASE; // rotated labels need more floor
   const plotH = height - PAD_T - PAD_B;
   const sy = (v: number) => PAD_T + plotH - ((v - lo) / (hi - lo)) * plotH;
   const fmt = (v: number) => fmtValue(yField, v);
@@ -179,7 +182,7 @@ export default function BucketBox({
                         y1={sy(s.max)}
                         x2={cx}
                         y2={sy(dotTop)}
-                        stroke={INK[0]}
+                        stroke={DEEP}
                         strokeWidth={1.5}
                         strokeDasharray="1.5 3.5"
                         strokeLinecap="round"
@@ -189,20 +192,20 @@ export default function BucketBox({
                         y1={sy(dotBot)}
                         x2={cx}
                         y2={sy(s.min)}
-                        stroke={INK[0]}
+                        stroke={DEEP}
                         strokeWidth={1.5}
                         strokeDasharray="1.5 3.5"
                         strokeLinecap="round"
                       />
-                      <line x1={cx - BOX_W / 2} y1={sy(s.max)} x2={cx + BOX_W / 2} y2={sy(s.max)} stroke={INK[0]} strokeWidth={1.25} />
-                      <line x1={cx - BOX_W / 2} y1={sy(s.min)} x2={cx + BOX_W / 2} y2={sy(s.min)} stroke={INK[0]} strokeWidth={1.25} />
+                      <line x1={cx - BOX_W / 2} y1={sy(s.max)} x2={cx + BOX_W / 2} y2={sy(s.max)} stroke={DEEP} strokeWidth={1.25} />
+                      <line x1={cx - BOX_W / 2} y1={sy(s.min)} x2={cx + BOX_W / 2} y2={sy(s.min)} stroke={DEEP} strokeWidth={1.25} />
                       {/* ±2σ: solid stems, box-width caps */}
                       {showSd2 && (
                         <>
-                          <line x1={cx} y1={sy(s.hi2)} x2={cx} y2={sy(top)} stroke={INK[0]} strokeWidth={2} />
-                          <line x1={cx} y1={sy(bot)} x2={cx} y2={sy(s.lo2)} stroke={INK[0]} strokeWidth={2} />
-                          <line x1={cx - BOX_W / 2} y1={sy(s.hi2)} x2={cx + BOX_W / 2} y2={sy(s.hi2)} stroke={INK[0]} strokeWidth={2} />
-                          <line x1={cx - BOX_W / 2} y1={sy(s.lo2)} x2={cx + BOX_W / 2} y2={sy(s.lo2)} stroke={INK[0]} strokeWidth={2} />
+                          <line x1={cx} y1={sy(s.hi2)} x2={cx} y2={sy(top)} stroke={DEEP} strokeWidth={2} />
+                          <line x1={cx} y1={sy(bot)} x2={cx} y2={sy(s.lo2)} stroke={DEEP} strokeWidth={2} />
+                          <line x1={cx - BOX_W / 2} y1={sy(s.hi2)} x2={cx + BOX_W / 2} y2={sy(s.hi2)} stroke={DEEP} strokeWidth={2} />
+                          <line x1={cx - BOX_W / 2} y1={sy(s.lo2)} x2={cx + BOX_W / 2} y2={sy(s.lo2)} stroke={DEEP} strokeWidth={2} />
                         </>
                       )}
                     </>
@@ -214,7 +217,7 @@ export default function BucketBox({
                   y1={sy(s.mean)}
                   x2={cx + BOX_W / 2}
                   y2={sy(s.mean)}
-                  stroke={INK[0]}
+                  stroke={DEEP}
                   strokeWidth={2}
                 />
                 {!compact &&
@@ -260,7 +263,7 @@ export default function BucketBox({
                     fontSize={11.5}
                     fill="#171717"
                   >
-                    {clipLabel(s.label, Math.min(slot * 1.6, 150), 6.2)}
+                    {clipLabel(s.label, Math.min(slot * 1.6, 132), 6.2)}
                   </text>
                 ) : (
                   <>

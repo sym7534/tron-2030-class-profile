@@ -324,6 +324,10 @@ select:focus {
   break-inside: avoid;
   margin-bottom: 44px;
 }
+/* comparison cards lead their section at full width, spanning both columns */
+.card-grid > article.span-all {
+  column-span: all;
+}
 
 /* ---- footer ---- */
 .page-footer {

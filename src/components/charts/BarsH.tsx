@@ -1,11 +1,11 @@
 "use client";
 
 import {
-  INK,
   GRID,
   AXIS,
   AXIS_TEXT,
   AXIS_TITLE_PROPS,
+  purpleScale,
   barPathH,
   useMeasure,
   useTooltip,
@@ -43,6 +43,7 @@ export default function BarsH({ data, total, totalLabel = "of answers", maxRows 
   const denom = total ?? data.reduce((a, d) => a + d.count, 0);
   const max = Math.max(...shown.map((d) => d.count), 1);
   const { hi, ticks } = countDomain(max, 4);
+  const shadeFor = purpleScale(shown.map((d) => d.count));
   const chartW = Math.max(width - LABEL_W - PAD_R, 60);
   const rowsH = shown.length * ROW_H;
   const height = rowsH + AXIS_H;
@@ -101,7 +102,12 @@ export default function BarsH({ data, total, totalLabel = "of answers", maxRows 
                 >
                   {d.label.length > 24 ? d.label.slice(0, 23) + "…" : d.label}
                 </text>
-                {d.count > 0 && <path d={barPathH(LABEL_W, y + (ROW_H - BAR_H) / 2, w, BAR_H)} fill={INK[0]} />}
+                {d.count > 0 && (
+                  <path
+                    d={barPathH(LABEL_W, y + (ROW_H - BAR_H) / 2, w, BAR_H)}
+                    fill={shadeFor(d.count)}
+                  />
+                )}
                 <text
                   x={LABEL_W + w + 7}
                   y={y + ROW_H / 2 + 4}

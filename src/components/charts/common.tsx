@@ -4,6 +4,29 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 /** ink ramp — the only "palette": grayscale steps with wide lightness separation */
 export const INK = ["#171717", "#8a8a8a", "#c9c9c9", "#ececec"];
+/** Waterloo Engineering purple, used ONLY to shade count-bars by rank */
+export const PURPLE_SHADES = ["#5D0096", "#865DA4", "#A05DCB", "#C2A8F0"]; // deep → light
+
+/**
+ * Shade count-bars by dominance, not rank alone:
+ * - counts that are all roughly similar stay faint (#C2A8F0)
+ * - a bar only darkens toward #5D0096 when it truly towers over the rest
+ *   (depth unlocks with the max-to-median contrast of the whole chart)
+ */
+export function purpleScale(counts: number[]): (count: number) => string {
+  const pos = counts.filter((c) => c > 0).sort((a, b) => a - b);
+  if (pos.length === 0) return () => PURPLE_SHADES[3];
+  const max = pos[pos.length - 1];
+  const median = pos[Math.floor(pos.length / 2)];
+  const contrast = max / Math.max(median, 1);
+  // how deep this chart is allowed to go: all-similar → faint only
+  const depth = contrast >= 6 ? 3 : contrast >= 3 ? 2 : contrast >= 1.8 ? 1 : 0;
+  return (count: number) => {
+    const r = count / max;
+    const tier = r > 0.85 ? 3 : r > 0.55 ? 2 : r > 0.3 ? 1 : 0;
+    return PURPLE_SHADES[3 - Math.min(tier, depth)];
+  };
+}
 export const GRID = "#ececec";
 export const AXIS = "#737373"; // axis lines: clearly darker than gridlines
 export const AXIS_TEXT = "#4a4a4a";

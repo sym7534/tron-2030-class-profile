@@ -1,11 +1,11 @@
 "use client";
 
 import {
-  INK,
   GRID,
   AXIS,
   AXIS_TEXT,
   AXIS_TITLE_PROPS,
+  purpleScale,
   barPathV,
   useMeasure,
   useTooltip,
@@ -55,6 +55,7 @@ export default function Columns({
 
   const max = Math.max(...data.map((d) => d.count), 1);
   const { hi, ticks } = countDomain(max, 4);
+  const shadeFor = purpleScale(data.map((d) => d.count));
   const plotW = Math.max(width - PAD_L - PAD_R, 40);
   const plotH = height - PAD_B - PAD_T;
   const slot = plotW / Math.max(data.length, 1);
@@ -132,7 +133,7 @@ export default function Columns({
                 onPointerLeave={hide}
               >
                 <rect x={PAD_L + i * slot} y={PAD_T} width={slot} height={plotH + PAD_B} fill="transparent" />
-                {d.count > 0 && <path d={barPathV(x, y, colW, h)} fill={INK[0]} />}
+                {d.count > 0 && <path d={barPathV(x, y, colW, h)} fill={shadeFor(d.count)} />}
                 {showCaps && d.count > 0 && (
                   <text
                     x={x + colW / 2}

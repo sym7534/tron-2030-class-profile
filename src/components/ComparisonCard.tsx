@@ -52,6 +52,7 @@ export default function ComparisonCard({ spec }: { spec: ComparisonSpec }) {
   return (
     <article
       id={`cmp-${spec.y}-${spec.x}`}
+      className="span-all"
       style={{
         borderTop: "1px solid var(--border-card)",
         paddingTop: 14,
@@ -103,7 +104,7 @@ export default function ComparisonCard({ spec }: { spec: ComparisonSpec }) {
           buckets={buckets}
           yField={yf}
           xTitle={axisLabel(xf)}
-          height={330}
+          height={380}
         />
       )}
       <footer style={{ marginTop: 8, fontSize: 13.5 }} className="muted">
