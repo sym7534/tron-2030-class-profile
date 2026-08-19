@@ -20,7 +20,7 @@ function heroStats() {
     },
     {
       value: `${Math.round(distance.reduce((a, b) => a + b, 0)).toLocaleString("en-CA")} km`,
-      label: "combined distance from home — almost 3× around the Earth",
+      label: "combined distance from home",
     },
   ];
 }
