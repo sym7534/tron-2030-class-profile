@@ -567,3 +567,102 @@ html.lenis body {
     transform: none;
   }
 }
+
+/* ============================================================ mobile ≤700px
+   Desktop is untouched: everything below only tightens the phone experience. */
+@media (max-width: 700px) {
+  /* nav: one scrollable row instead of three wrapped ones */
+  .topnav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 18px;
+    padding: 12px 16px;
+  }
+  .topnav::-webkit-scrollbar {
+    display: none;
+  }
+  .topnav-links {
+    flex-wrap: nowrap;
+  }
+  .topnav a {
+    white-space: nowrap;
+    padding: 6px 0; /* ≥32px tap target */
+  }
+
+  /* breathing room without the desktop's wide gutters */
+  .hero,
+  .builder-section,
+  .chapter,
+  .page-footer {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .hero-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .hero-stat-value {
+    font-size: 27px;
+  }
+
+  /* builder controls stack full-width; selects ≥16px so iOS doesn't zoom */
+  .axis-row {
+    gap: 12px;
+  }
+  .axis-ctl {
+    width: 100%;
+    display: flex;
+  }
+  .axis-ctl select {
+    flex: 1;
+    width: 100%;
+    font-size: 16px;
+    padding: 8px 0;
+  }
+  .axis-label {
+    min-width: 44px;
+  }
+  .swap {
+    padding: 8px 10px;
+  }
+  .preset-row {
+    gap: 2px 14px;
+  }
+  .preset-row button {
+    padding: 7px 0; /* comfortable tap targets */
+    font-size: 14.5px;
+  }
+  .builder {
+    padding: 14px 12px;
+  }
+  .builder-title {
+    font-size: clamp(1.35rem, 6.4vw, 1.8rem);
+  }
+
+  /* chart/table + word walls */
+  .chart-views button,
+  .chart-foot button,
+  .builder-foot button,
+  footer button {
+    padding: 7px 2px;
+  }
+  .quote {
+    font-size: 15.5px;
+  }
+
+  /* tables scroll sideways inside the card instead of squishing */
+  .table-scroll {
+    overflow-x: auto;
+  }
+  .data-table {
+    min-width: 420px;
+  }
+
+  /* mbti grid cells shrink gracefully */
+  .mbti-cells {
+    gap: 4px;
+  }
+}
+

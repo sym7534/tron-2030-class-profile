@@ -36,7 +36,7 @@ interface Props {
 const PAD_L = 58;
 const PAD_R = 14;
 const PAD_T = 16;
-const PAD_B = 56;
+const PAD_B_BASE = 56;
 const BOX_W = 26; // ±1σ box; ±2σ and min/max caps share this width
 
 function sd(xs: number[], m: number): number {
@@ -84,8 +84,12 @@ export default function BucketBox({
   const all = stats.flatMap((s) => [s.min, s.max]);
   const { lo, hi, ticks } = niceDomain(all, { target: 5 });
   const plotW = Math.max(width - PAD_L - PAD_R, 40);
-  const plotH = height - PAD_T - PAD_B;
   const slot = plotW / stats.length;
+  // narrow slots (phones / many buckets): hide side value-labels (tooltip and
+  // table still carry them), rotate bucket labels so they can't collide
+  const compact = slot < 92;
+  const PAD_B = compact ? 78 : PAD_B_BASE; // rotated labels need more floor
+  const plotH = height - PAD_T - PAD_B;
   const sy = (v: number) => PAD_T + plotH - ((v - lo) / (hi - lo)) * plotH;
   const fmt = (v: number) => fmtValue(yField, v);
   const fmtShort = (v: number) =>
@@ -207,10 +211,11 @@ export default function BucketBox({
                   stroke={INK[0]}
                   strokeWidth={2}
                 />
-                {(() => {
-                  // flip value labels to the left of the box when the right
-                  // edge would clip them (last bucket on narrow screens)
-                  const flip = cx + BOX_W / 2 + 44 > width - PAD_R;
+                {!compact &&
+                  (() => {
+                    // flip value labels to the left of the box when the right
+                    // edge would clip them (last bucket on narrow screens)
+                    const flip = cx + BOX_W / 2 + 44 > width - PAD_R;
                   const lx = flip ? cx - BOX_W / 2 - 7 : cx + BOX_W / 2 + 7;
                   const anchor = flip ? "end" : "start";
                   return (
@@ -236,16 +241,31 @@ export default function BucketBox({
                           {fmtShort(s.min)}
                         </text>
                       )}
-                    </>
-                  );
-                })()}
+                      </>
+                    );
+                  })()}
                 {/* bucket label + n */}
-                <text x={cx} y={PAD_T + plotH + 16} textAnchor="middle" fontSize={13} fill="#171717">
-                  {s.label.length > 14 ? s.label.slice(0, 13) + "…" : s.label}
-                </text>
-                <text x={cx} y={PAD_T + plotH + 29} textAnchor="middle" fontSize={11.5} fill={AXIS_TEXT}>
-                  n={s.n}
-                </text>
+                {compact ? (
+                  <text
+                    transform={`rotate(-35 ${cx + 4} ${PAD_T + plotH + 16})`}
+                    x={cx + 4}
+                    y={PAD_T + plotH + 16}
+                    textAnchor="end"
+                    fontSize={11.5}
+                    fill="#171717"
+                  >
+                    {s.label.length > 12 ? s.label.slice(0, 11) + "…" : s.label}
+                  </text>
+                ) : (
+                  <>
+                    <text x={cx} y={PAD_T + plotH + 16} textAnchor="middle" fontSize={13} fill="#171717">
+                      {s.label.length > 14 ? s.label.slice(0, 13) + "…" : s.label}
+                    </text>
+                    <text x={cx} y={PAD_T + plotH + 29} textAnchor="middle" fontSize={11.5} fill={AXIS_TEXT}>
+                      n={s.n}
+                    </text>
+                  </>
+                )}
               </g>
             );
           })}
