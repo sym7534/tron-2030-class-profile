@@ -63,7 +63,7 @@ const server = http.createServer((req, res) => {
       const txt = bd.querySelector(".word-wall, blockquote");
       const msg =
         bd.innerText.includes("nobody answered both") ||
-        bd.innerText.includes("pick a question");
+        bd.innerText.includes("Build your own graph");
       return { h: svg ? Math.round(svg.getBoundingClientRect().height) : 0, grid: !!grid, txt: !!txt, msg };
     });
     if (st.h < 30 && !st.grid && !st.txt && !st.msg) { console.log("  EMPTY:", x, "x", y, JSON.stringify(st)); bad++; }

@@ -40,11 +40,11 @@ const isCat = (f: Field | null) =>
 const MAX_CAT_ROWS = 12;
 
 export default function GraphBuilder() {
-  const [xId, setXId] = useState("cumAvg");
-  const [yId, setYId] = useState("wage");
+  const [xId, setXId] = useState("");
+  const [yId, setYId] = useState("");
   const [filterId, setFilterId] = useState("");
   const [filterVal, setFilterVal] = useState("");
-  const [preset, setPreset] = useState<string | null>("money vs. marks");
+  const [preset, setPreset] = useState<string | null>(null);
   // dashboard display toggles
   const [grid, setGrid] = useState(true);
   const [sd1, setSd1] = useState(true);
@@ -79,13 +79,14 @@ export default function GraphBuilder() {
   useEffect(() => {
     if (!touched.current) return;
     const p = new URLSearchParams();
-    p.set("gx", xId);
-    p.set("gy", yId);
+    if (xId) p.set("gx", xId);
+    if (yId) p.set("gy", yId);
     if (filterId && filterVal) {
       p.set("gf", filterId);
       p.set("gv", filterVal);
     }
-    history.replaceState(null, "", "#" + p.toString());
+    const qs = p.toString();
+    history.replaceState(null, "", qs ? "#" + qs : window.location.pathname);
   }, [xId, yId, filterId, filterVal]);
 
   const filterOptions = useMemo(
@@ -125,14 +126,14 @@ export default function GraphBuilder() {
   let body: React.ReactNode = null;
   let caption: React.ReactNode = null;
   let table: { headers: string[]; rows: (string | number)[][] } | undefined;
-  let title = "pick something";
+  let title = "Compare any stat against any other";
 
   const uniField = !xf ? yf : !yf ? xf : null;
 
   if (!xf && !yf) {
     body = (
       <p className="muted" style={{ padding: "48px 0", textAlign: "center" }}>
-        pick a question for at least one axis.
+        Want to see a comparison that isn&rsquo;t shown? Build your own graph here.
       </p>
     );
   } else if (uniField) {
@@ -350,7 +351,8 @@ export default function GraphBuilder() {
         setPreset(null);
       }}
     >
-      <option value={COUNT}>— just count people —</option>
+      <option value="">&mdash; select &mdash;</option>
+      <option value={COUNT}>&mdash; just count people &mdash;</option>
       {grouped.map(([section, fields]) => (
         <optgroup key={section} label={section}>
           {fields.map((f) => (
@@ -492,7 +494,6 @@ export default function GraphBuilder() {
       )}
 
       <div className="preset-row" style={{ marginTop: 18, marginBottom: 0 }}>
-        <span className="muted preset-lead">try one:</span>
         {PRESETS.map((p) => (
           <button
             key={p.name}
