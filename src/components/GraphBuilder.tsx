@@ -102,11 +102,25 @@ export default function GraphBuilder() {
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
     const scale = 2; // crisp export
+    const TITLE_H = 44; // headroom for the chart title in the file
     const clone = svg.cloneNode(true) as SVGSVGElement;
     clone.setAttribute("width", String(rect.width));
     clone.setAttribute("height", String(rect.height));
-    // inline the CSS-var driven fonts/colors so the export matches the page
-    clone.setAttribute("style", "font-family: Arial, Helvetica, sans-serif; background:#ffffff");
+    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    // CSS variables don't resolve in a detached SVG: inline the computed
+    // fill/font of every text node so the export matches the page
+    const liveNodes = svg.querySelectorAll<SVGElement>("text, line, rect, path, circle");
+    const cloneNodes = clone.querySelectorAll<SVGElement>("text, line, rect, path, circle");
+    liveNodes.forEach((node, i) => {
+      const cs = getComputedStyle(node);
+      const target = cloneNodes[i];
+      if (!target) return;
+      if (node.tagName === "text") {
+        target.setAttribute("fill", cs.fill);
+        target.setAttribute("font-family", "Arial, Helvetica, sans-serif");
+        if (!target.getAttribute("font-size")) target.setAttribute("font-size", cs.fontSize);
+      }
+    });
     const xml = new XMLSerializer().serializeToString(clone);
     const blob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -114,11 +128,18 @@ export default function GraphBuilder() {
     img.onload = () => {
       const canvas = document.createElement("canvas");
       canvas.width = Math.round(rect.width * scale);
-      canvas.height = Math.round(rect.height * scale);
+      canvas.height = Math.round((rect.height + TITLE_H) * scale);
       const ctx = canvas.getContext("2d")!;
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      // chart title baked into the file
+      ctx.fillStyle = "#171717";
+      ctx.font = `600 ${15 * scale}px Arial, Helvetica, sans-serif`;
+      ctx.fillText(title, 12 * scale, 24 * scale);
+      ctx.font = `${11 * scale}px Arial, Helvetica, sans-serif`;
+      ctx.fillStyle = "#737373";
+      ctx.fillText("Mechatronics 2030 class profile", 12 * scale, 38 * scale);
+      ctx.drawImage(img, 0, TITLE_H * scale, canvas.width, Math.round(rect.height * scale));
       URL.revokeObjectURL(url);
       const a = document.createElement("a");
       const name = title.replace(/[^\w]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase() || "chart";
