@@ -131,9 +131,13 @@ export default function QuestionCard({ id }: { id: string; qNum?: number }) {
 
   const excluded = rep?.excluded ?? [];
 
+  /** wide cards that should span both grid columns */
+  const SPAN_ALL = id === "company";
+
   return (
     <article
       id={`q-${id}`}
+      className={SPAN_ALL ? "span-all" : undefined}
       style={{
         borderTop: "1px solid var(--border-card)",
         paddingTop: 14,
