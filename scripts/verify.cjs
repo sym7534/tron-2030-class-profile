@@ -66,7 +66,7 @@ function startServer() {
 
   // ---- audit: does every question card have a visible graphic?
   const audit = await page.evaluate(() => {
-    const cards = [...document.querySelectorAll("article[id^='q-']")];
+    const cards = [...document.querySelectorAll("article[id^='q-'], article[id^='cmp-']")];
     const empty = [];
     for (const c of cards) {
       const svg = c.querySelector("svg");

@@ -23,7 +23,7 @@ import Heatmap from "./charts/Heatmap";
 import BarsH from "./charts/BarsH";
 import Histogram from "./charts/Histogram";
 import ChartFrame from "./ChartFrame";
-import { niceDomain } from "./charts/common";
+import { numericBuckets, bucketTable } from "@/lib/buckets";
 import { axisLabel } from "@/lib/data";
 
 const COUNT = "count";
@@ -38,64 +38,6 @@ const isCat = (f: Field | null) =>
   !!f && (f.kind === "categorical" || f.kind === "ordinal" || f.kind === "multi");
 
 const MAX_CAT_ROWS = 12;
-
-/** bucket numeric x values into clean ranges — every pair lands in a bucket */
-function numericBuckets(
-  pairs: { x: number; y: number }[],
-  xf: Field,
-  bucketCount = 5
-): Bucket[] {
-  const xs = pairs.map((p) => p.x);
-  const nB = Math.max(1, Math.min(10, Math.round(bucketCount)));
-  const edges: number[] = [];
-  if (xf.intScale && xf.intScale[1] - xf.intScale[0] <= 10) {
-    // small integer scales: split the value range into nB equal integer runs
-    const [lo, hi] = xf.intScale;
-    const step = Math.ceil((hi - lo + 1) / nB);
-    for (let v = lo; v <= hi + 1; v += step) edges.push(v - 0.5);
-    if (edges[edges.length - 1] < hi + 0.5) edges.push(hi + 0.5);
-  } else {
-    // equal-width buckets over a tick-snapped overall range
-    const { lo, hi } = niceDomain(xs, { target: 5 });
-    for (let i = 0; i <= nB; i++) edges.push(lo + ((hi - lo) * i) / nB);
-  }
-  const buckets: Bucket[] = [];
-  for (let i = 0; i < edges.length - 1; i++) {
-    const x0 = edges[i];
-    const x1 = edges[i + 1];
-    const last = i === edges.length - 2;
-    const inB = pairs.filter((p) => p.x >= x0 && (last ? p.x <= x1 : p.x < x1));
-    if (inB.length === 0) continue; // nothing to plot in this range
-    const f = (v: number) => fmtValue(xf, v).replace(/\s/g, "");
-    buckets.push({
-      label: xf.intScale
-        ? Math.ceil(x0) === Math.floor(x1)
-          ? `${Math.ceil(x0)}`
-          : `${Math.ceil(x0)}–${Math.floor(x1)}`
-        : `${f(x0)}–${f(x1)}`,
-      values: inB.map((p) => p.y),
-    });
-  }
-  return buckets;
-}
-
-function bucketTable(buckets: Bucket[], yf: Field) {
-  const sd = (xs: number[]) => {
-    const m = mean(xs);
-    return Math.sqrt(xs.reduce((a, x) => a + (x - m) ** 2, 0) / xs.length);
-  };
-  return {
-    headers: ["bucket", "people", "mean", "\u03c3", "min", "max"],
-    rows: buckets.map((b) => [
-      b.label,
-      b.values.length,
-      fmtValue(yf, mean(b.values)),
-      fmtValue(yf, sd(b.values)),
-      fmtValue(yf, Math.min(...b.values)),
-      fmtValue(yf, Math.max(...b.values)),
-    ]),
-  };
-}
 
 export default function GraphBuilder() {
   const [xId, setXId] = useState("cumAvg");

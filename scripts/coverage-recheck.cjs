@@ -179,6 +179,44 @@ const survey = JSON.parse(fs.readFileSync("src/data/survey.json", "utf8"));
     failures++;
   }
 
+  // ---------- 5. comparison cards: spot-check "Hourly pay vs. gender" math
+  const cmp = await p.evaluate(() => {
+    const card = document.querySelector("article[id^='cmp-wage-gender']");
+    if (!card) return null;
+    // flip to table for exact numbers
+    const btn = [...card.querySelectorAll("button")].find((b) => /table/.test(b.innerText));
+    btn?.click();
+    return new Promise((res) =>
+      setTimeout(() => {
+        const rows = [...card.querySelectorAll(".data-table tbody tr")].map((tr) =>
+          [...tr.querySelectorAll("td")].map((td) => td.innerText.trim())
+        );
+        res(rows);
+      }, 250)
+    );
+  });
+  if (!cmp) {
+    console.log("  CMP CARD MISSING: cmp-wage-gender");
+    failures++;
+  } else {
+    let cmpBad = 0;
+    for (const [label, people, meanS] of cmp) {
+      const inG = survey.rows.filter(
+        (r) => r.gender === label && typeof r.wage === "number"
+      );
+      if (label.startsWith("everything else")) continue;
+      const ys = inG.map((r) => r.wage);
+      if (ys.length === 0) { cmpBad++; console.log("  CMP EMPTY GROUP:", label); continue; }
+      const meanE = ys.reduce((a, v) => a + v, 0) / ys.length;
+      if (Number(people) !== ys.length || Math.abs(num(meanS) - meanE) > 0.15) {
+        console.log("  CMP MISMATCH:", label, { people, meanS }, "expected", { n: ys.length, mean: Math.round(meanE * 10) / 10 });
+        cmpBad++;
+      }
+    }
+    console.log(`comparison card math (wage × gender): ${cmp.length} groups, ${cmpBad} mismatches`);
+    if (cmpBad) failures++;
+  }
+
   await b.close();
   server.close();
   console.log(failures === 0 ? "COVERAGE RECHECK PASS" : `COVERAGE RECHECK: ${failures} failures`);
