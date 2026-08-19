@@ -62,7 +62,9 @@ const survey = JSON.parse(fs.readFileSync("src/data/survey.json", "utf8"));
   console.log(`dot-leak sweep: ${pairs.length} pairs, ${dotLeaks} leaks`);
   if (dotLeaks) failures++;
 
-  // ---------- 2. recompute one bucket independently: cumAvg × wage
+  // ---------- 2. independent bucket math via the table twin.
+  // Parse each rendered bucket's range from its label, recompute n/mean/min/max
+  // from survey.json, and diff. Robust to bucket-count changes in the UI.
   await p.selectOption("#x-axis", "cumAvg");
   await p.selectOption("#y-axis", "wage");
   await p.waitForTimeout(400);
@@ -72,49 +74,59 @@ const survey = JSON.parse(fs.readFileSync("src/data/survey.json", "utf8"));
     );
     return texts;
   });
-  // recompute: buckets on clean cumAvg edges — every pair must appear
+  const tableRows = await p.evaluate(() => {
+    [...document.querySelectorAll(".builder .chart-views button")]
+      .find((b) => b.innerText.trim() === "table")
+      ?.click();
+    return new Promise((res) =>
+      setTimeout(() => {
+        const rows = [...document.querySelectorAll(".builder .data-table tbody tr")].map((tr) =>
+          [...tr.querySelectorAll("td")].map((td) => td.innerText.trim())
+        );
+        // switch back to chart for later steps
+        [...document.querySelectorAll(".builder .chart-views button")]
+          .find((b) => b.innerText.trim() === "chart")
+          ?.click();
+        res(rows);
+      }, 250)
+    );
+  });
   const pts = survey.rows
     .map((r) => ({ x: r.cumAvg, y: r.wage }))
     .filter((p) => typeof p.x === "number" && typeof p.y === "number");
-  // niceDomain(target 5) over cumAvg range ~ [60..100] step 10 -> edges 60,70,80,90,100
-  const edges = [60, 70, 80, 90, 100];
-  const expected = [];
-  for (let i = 0; i < edges.length - 1; i++) {
-    const last = i === edges.length - 2;
-    const inB = pts.filter((q) => q.x >= edges[i] && (last ? q.x <= edges[i + 1] : q.x < edges[i + 1]));
-    if (inB.length >= 1) {
-      const ys = inB.map((q) => q.y);
-      const m = ys.reduce((a, v) => a + v, 0) / ys.length;
-      expected.push({
-        n: inB.length,
-        mean: Math.round(m * 10) / 10,
-        min: Math.min(...ys),
-        max: Math.max(...ys),
-      });
-    }
-  }
-  console.log("expected buckets:", JSON.stringify(expected));
+  const num = (s) => parseFloat(String(s).replace(/[^\d.\-]/g, ""));
   let mathBad = 0;
-  for (const e of expected) {
-    const nOk = domStats.some((t) => t === `n=${e.n}`);
-    const meanOk = domStats.some((t) => Math.abs(parseFloat(t) - e.mean) < 0.15);
-    const maxOk = domStats.some((t) => Math.abs(parseFloat(t) - e.max) < 0.15);
-    if (!nOk || !meanOk || !maxOk) {
-      console.log("  MATH MISMATCH:", JSON.stringify(e), { nOk, meanOk, maxOk });
+  let covered = 0;
+  tableRows.forEach((row, i) => {
+    const [label, people, meanS, , minS, maxS] = row;
+    const m = String(label).match(/([\d.]+)%?\s*[–-]\s*([\d.]+)/);
+    if (!m) { console.log("  UNPARSEABLE LABEL:", label); mathBad++; return; }
+    const x0 = parseFloat(m[1]);
+    const x1 = parseFloat(m[2]);
+    const last = i === tableRows.length - 1;
+    const inB = pts.filter((q) => q.x >= x0 && (last ? q.x <= x1 : q.x < x1));
+    const ys = inB.map((q) => q.y);
+    covered += inB.length;
+    if (ys.length === 0) { console.log("  EMPTY EXPECTED BUCKET:", label); mathBad++; return; }
+    const meanE = ys.reduce((a, v) => a + v, 0) / ys.length;
+    const ok =
+      Number(people) === ys.length &&
+      Math.abs(num(meanS) - meanE) < 0.15 &&
+      Math.abs(num(minS) - Math.min(...ys)) < 0.15 &&
+      Math.abs(num(maxS) - Math.max(...ys)) < 0.15;
+    if (!ok) {
+      console.log("  MATH MISMATCH:", label, JSON.stringify({ people, meanS, minS, maxS }),
+        "expected", JSON.stringify({ n: ys.length, mean: Math.round(meanE * 10) / 10, min: Math.min(...ys), max: Math.max(...ys) }));
       mathBad++;
     }
-  }
-  console.log(`bucket math: ${expected.length} buckets checked, ${mathBad} mismatches`);
+  });
+  console.log(`bucket math: ${tableRows.length} buckets checked against survey.json, ${mathBad} mismatches`);
   if (mathBad) failures++;
 
-  // ---------- 2b. full coverage: n= labels in the chart sum to total pairs
-  const nLabels = domStats
-    .filter((t) => /^n=\d+$/.test(t))
-    .map((t) => parseInt(t.slice(2), 10));
-  const nSum = nLabels.reduce((a, b) => a + b, 0);
-  console.log(`coverage: chart shows ${JSON.stringify(nLabels)} = ${nSum}, expected ${pts.length}`);
-  if (nSum !== pts.length) {
-    console.log("  COVERAGE FAIL: bucket n's don't sum to all answered pairs");
+  // ---------- 2b. full coverage: table buckets jointly cover every answered pair
+  console.log(`coverage: table buckets cover ${covered} of ${pts.length} answered pairs`);
+  if (covered !== pts.length) {
+    console.log("  COVERAGE FAIL: bucket ranges don't cover all answered pairs");
     failures++;
   }
 
