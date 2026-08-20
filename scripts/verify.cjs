@@ -47,7 +47,8 @@ function startServer() {
 
   const errors = [];
   page.on("console", (m) => {
-    if (m.type() === "error") errors.push(m.text());
+    // vercel analytics script 404s when not hosted on vercel; benign
+    if (m.type() === "error" && !/_vercel\/insights/.test(m.location()?.url ?? "")) errors.push(m.text());
   });
   page.on("pageerror", (e) => errors.push("PAGEERROR: " + e.message));
 

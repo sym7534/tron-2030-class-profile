@@ -22,7 +22,7 @@ const server = http.createServer((req, res) => {
   const p = await b.newPage({ viewport: { width: 1440, height: 1000 } });
   const errors = [];
   p.on("pageerror", (e) => errors.push("PAGEERROR: " + e.message));
-  p.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
+  p.on("console", (m) => { if (m.type() === "error" && !/_vercel\/insights/.test(m.location()?.url ?? "")) errors.push(m.text()); }); // vercel analytics 404s off-vercel
 
   await p.goto(`http://127.0.0.1:${PORT}`, { waitUntil: "load" });
   await p.waitForTimeout(1200);
