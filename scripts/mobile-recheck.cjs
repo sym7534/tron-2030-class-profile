@@ -83,25 +83,27 @@ const server = http.createServer((req, res) => {
   console.log(`tap targets <32px tall at 390: ${tiny}`);
   if (tiny > 0) failures++;
 
-  // interactions on mobile
+  // interactions on mobile (presets and builder table were removed by design;
+  // the flows that remain: axis selects render a chart, cmp-card table toggles)
   await p.evaluate(() => document.querySelector("#builder").scrollIntoView());
   await p.waitForTimeout(300);
-  // 1. preset tap
-  await p.click(".preset-row button >> nth=1");
+  // 1. two axis changes produce different charts
+  await p.selectOption("#x-axis", "cumAvg");
+  await p.selectOption("#y-axis", "wage");
   await p.waitForTimeout(500);
   const title1 = await p.evaluate(() => document.querySelector(".builder-title")?.innerText);
-  // 2. axis change
   await p.selectOption("#x-axis", "caffeine");
   await p.waitForTimeout(500);
   const title2 = await p.evaluate(() => document.querySelector(".builder-title")?.innerText);
-  // 3. table toggle
-  await p.evaluate(() => {
-    [...document.querySelectorAll(".builder .chart-views button")]
-      .find((b) => b.innerText.trim() === "table")
-      ?.click();
+  // 2. comparison-card table toggle still works on touch layouts
+  const rows = await p.evaluate(() => {
+    const card = document.querySelector("article[id^='cmp-']");
+    const btn = [...(card?.querySelectorAll("button") ?? [])].find((b) => /table/.test(b.innerText));
+    btn?.click();
+    return new Promise((res) =>
+      setTimeout(() => res(card?.querySelectorAll(".data-table tbody tr").length ?? 0), 300)
+    );
   });
-  await p.waitForTimeout(400);
-  const rows = await p.evaluate(() => document.querySelectorAll(".builder .data-table tbody tr").length);
   console.log("interactions:", JSON.stringify({ title1, title2, tableRows: rows }));
   const intOk = title1 && title2 && title1 !== title2 && rows > 0;
   console.log(intOk ? "mobile interactions OK" : "FAIL: mobile interaction broken");
