@@ -179,9 +179,9 @@ const survey = JSON.parse(fs.readFileSync("src/data/survey.json", "utf8"));
     failures++;
   }
 
-  // ---------- 5. comparison cards: spot-check "Hourly pay vs. gender" math
+  // ---------- 5. comparison cards: spot-check "Hourly pay vs. location" math
   const cmp = await p.evaluate(() => {
-    const card = document.querySelector("article[id^='cmp-wage-gender']");
+    const card = document.querySelector("article[id^='cmp-wage-workCity']");
     if (!card) return null;
     // flip to table for exact numbers
     const btn = [...card.querySelectorAll("button")].find((b) => /table/.test(b.innerText));
@@ -196,15 +196,15 @@ const survey = JSON.parse(fs.readFileSync("src/data/survey.json", "utf8"));
     );
   });
   if (!cmp) {
-    console.log("  CMP CARD MISSING: cmp-wage-gender");
+    console.log("  CMP CARD MISSING: cmp-wage-workCity");
     failures++;
   } else {
     let cmpBad = 0;
     for (const [label, people, meanS] of cmp) {
-      const inG = survey.rows.filter(
-        (r) => r.gender === label && typeof r.wage === "number"
-      );
       if (label.startsWith("everything else")) continue;
+      const inG = survey.rows.filter(
+        (r) => r.workCity === label && typeof r.wage === "number"
+      );
       const ys = inG.map((r) => r.wage);
       if (ys.length === 0) { cmpBad++; console.log("  CMP EMPTY GROUP:", label); continue; }
       const meanE = ys.reduce((a, v) => a + v, 0) / ys.length;
@@ -213,7 +213,7 @@ const survey = JSON.parse(fs.readFileSync("src/data/survey.json", "utf8"));
         cmpBad++;
       }
     }
-    console.log(`comparison card math (wage × gender): ${cmp.length} groups, ${cmpBad} mismatches`);
+    console.log(`comparison card math (wage × city): ${cmp.length} groups, ${cmpBad} mismatches`);
     if (cmpBad) failures++;
   }
 

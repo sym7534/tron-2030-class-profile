@@ -55,9 +55,7 @@ export interface SectionComparison {
 export const SECTION_COMPARISONS: Record<string, SectionComparison[]> = {
   coop: [
     { y: "wage", x: "cumAvg", title: "Hourly pay vs. cumulative average" },
-    { y: "wage", x: "jobType", title: "Hourly pay vs. type of job" },
     { y: "wage", x: "workCity", title: "Hourly pay vs. location" },
-    { y: "wage", x: "gender", title: "Hourly pay vs. gender" },
   ],
   firstyear: [
     { y: "cumAvg", x: "hsAvg", title: "Uni average vs. high school average" },
