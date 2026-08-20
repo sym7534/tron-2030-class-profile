@@ -179,9 +179,10 @@ const survey = JSON.parse(fs.readFileSync("src/data/survey.json", "utf8"));
     failures++;
   }
 
-  // ---------- 5. comparison cards: spot-check "Hourly pay vs. location" math
+  // ---------- 5. comparison cards: spot-check "Uni average vs. HS program" math
+  // (fixed groups: French immersion / Gifted / IB / AP / None, rest pooled into Other)
   const cmp = await p.evaluate(() => {
-    const card = document.querySelector("article[id^='cmp-wage-workCity']");
+    const card = document.querySelector("article[id^='cmp-cumAvg-enriched']");
     if (!card) return null;
     // flip to table for exact numbers
     const btn = [...card.querySelectorAll("button")].find((b) => /table/.test(b.innerText));
@@ -196,16 +197,22 @@ const survey = JSON.parse(fs.readFileSync("src/data/survey.json", "utf8"));
     );
   });
   if (!cmp) {
-    console.log("  CMP CARD MISSING: cmp-wage-workCity");
+    console.log("  CMP CARD MISSING: cmp-cumAvg-enriched");
     failures++;
   } else {
+    const KEEP = ["French immersion", "Gifted / Enhanced", "IB", "AP", "None"];
+    const groupsOf = (r) => {
+      const cats = Array.isArray(r.enriched) ? r.enriched : [];
+      return [...new Set(cats.map((c) => (KEEP.includes(c) ? c : "Other")))];
+    };
     let cmpBad = 0;
+    const seen = cmp.map((r) => r[0]);
+    const badLabel = seen.find((l) => !KEEP.includes(l) && l !== "Other");
+    if (badLabel) { console.log("  CMP UNEXPECTED GROUP:", badLabel); cmpBad++; }
     for (const [label, people, meanS] of cmp) {
-      if (label.startsWith("everything else")) continue;
-      const inG = survey.rows.filter(
-        (r) => r.workCity === label && typeof r.wage === "number"
-      );
-      const ys = inG.map((r) => r.wage);
+      const ys = survey.rows
+        .filter((r) => typeof r.cumAvg === "number" && groupsOf(r).includes(label))
+        .map((r) => r.cumAvg);
       if (ys.length === 0) { cmpBad++; console.log("  CMP EMPTY GROUP:", label); continue; }
       const meanE = ys.reduce((a, v) => a + v, 0) / ys.length;
       if (Number(people) !== ys.length || Math.abs(num(meanS) - meanE) > 0.15) {
@@ -213,7 +220,7 @@ const survey = JSON.parse(fs.readFileSync("src/data/survey.json", "utf8"));
         cmpBad++;
       }
     }
-    console.log(`comparison card math (wage × city): ${cmp.length} groups, ${cmpBad} mismatches`);
+    console.log(`comparison card math (cumAvg × enriched): ${cmp.length} groups, ${cmpBad} mismatches`);
     if (cmpBad) failures++;
   }
 

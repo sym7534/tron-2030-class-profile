@@ -55,12 +55,45 @@ export function numericBuckets(
   return buckets;
 }
 
+/** fields shown with a fixed set of groups; every other answer pools into `other` */
+const FIXED_GROUPS: Record<string, { keep: string[]; other: string }> = {
+  enriched: {
+    keep: ["French immersion", "Gifted / Enhanced", "IB", "AP", "None"],
+    other: "Other",
+  },
+};
+
+/** fixed-group buckets for a field, or null when the field has no fixed grouping */
+export function fixedGroupBuckets(
+  catF: Field,
+  numF: Field,
+  rows: Row[] = survey.rows
+): Bucket[] | null {
+  const fixed = FIXED_GROUPS[catF.id];
+  if (!fixed) return null;
+  const order = [...fixed.keep, fixed.other];
+  const byLabel = new Map<string, number[]>(order.map((g) => [g, []]));
+  for (const r of rows) {
+    const y = numericOf(r, numF);
+    if (y === null) continue;
+    const groups = new Set(
+      categoriesOf(r, catF).map((c) => (fixed.keep.includes(c) ? c : fixed.other))
+    );
+    for (const g of groups) byLabel.get(g)!.push(y);
+  }
+  return order
+    .map((label) => ({ label, values: byLabel.get(label)! }))
+    .filter((b) => b.values.length > 0);
+}
+
 /** categorical x → one group per answer, overflow pooled into "everything else" */
 export function categoryBuckets(
   catF: Field,
   numF: Field,
   rows: Row[] = survey.rows
 ): { buckets: Bucket[]; pooled: boolean } {
+  const fixed = fixedGroupBuckets(catF, numF, rows);
+  if (fixed) return { buckets: fixed, pooled: false };
   const allGroups: Bucket[] = distribution(catF, rows)
     .map((d) => ({
       label: shortCat(catF, d.label),

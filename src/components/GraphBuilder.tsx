@@ -21,7 +21,7 @@ import BucketBox, { Bucket } from "./charts/BucketBox";
 import Heatmap from "./charts/Heatmap";
 import BarsH from "./charts/BarsH";
 import Histogram from "./charts/Histogram";
-import { numericBuckets, bucketTable } from "@/lib/buckets";
+import { numericBuckets, bucketTable, fixedGroupBuckets } from "@/lib/buckets";
 import { axisLabel } from "@/lib/data";
 
 const COUNT = "count";
@@ -283,19 +283,22 @@ export default function GraphBuilder() {
       // ---- category × numeric: same aggregate boxes, one per category
       const catF = isCat(xf) ? xf : yf;
       const numF = isCat(xf) ? yf : xf;
-      const allGroups: Bucket[] = distribution(catF, rows)
-        .map((d) => ({
-          label: shortCat(catF, d.label),
-          values: rows
-            .filter((r) => categoriesOf(r, catF).includes(d.label))
-            .map((r) => numericOf(r, numF))
-            .filter((v): v is number => v !== null),
-        }))
-        .filter((b) => b.values.length > 0)
-        .sort((a, b) => mean(b.values) - mean(a.values));
+      const fixedB = fixedGroupBuckets(catF, numF, rows);
+      const allGroups: Bucket[] =
+        fixedB ??
+        distribution(catF, rows)
+          .map((d) => ({
+            label: shortCat(catF, d.label),
+            values: rows
+              .filter((r) => categoriesOf(r, catF).includes(d.label))
+              .map((r) => numericOf(r, numF))
+              .filter((v): v is number => v !== null),
+          }))
+          .filter((b) => b.values.length > 0)
+          .sort((a, b) => mean(b.values) - mean(a.values));
       // keep the chart readable: many tiny categories fold into one combined group
       let buckets = allGroups;
-      if (allGroups.length > MAX_CAT_ROWS) {
+      if (!fixedB && allGroups.length > MAX_CAT_ROWS) {
         const kept = allGroups.slice(0, MAX_CAT_ROWS - 1);
         const rest = allGroups.slice(MAX_CAT_ROWS - 1);
         buckets = [
@@ -325,7 +328,8 @@ export default function GraphBuilder() {
       );
       caption = (
         <>
-          # of responses = <span className="tnum">{shown}</span> &middot; sorted by mean
+          # of responses = <span className="tnum">{shown}</span>
+          {!fixedB && <> &middot; sorted by mean</>}
           {catF.kind === "multi" && <> &middot; pick-many</>}
         </>
       );
