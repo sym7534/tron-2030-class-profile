@@ -230,6 +230,10 @@ select:focus {
   flex-wrap: wrap;
   gap: 4px 18px;
 }
+.topnav-github {
+  margin-left: auto; /* pin to the top right */
+  white-space: nowrap;
+}
 
 /* ---- hero ---- */
 .hero {

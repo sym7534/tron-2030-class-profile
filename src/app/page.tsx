@@ -46,6 +46,14 @@ export default function Home() {
             </a>
           ))}
         </span>
+        <a
+          className="topnav-github"
+          href="https://github.com/sym7534/tron-2030-class-profile"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          github
+        </a>
       </nav>
 
       <main id="top">
